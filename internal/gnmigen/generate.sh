@@ -43,6 +43,7 @@ COMMON_ARGS=(
   -generate_rename
   -generate_delete
   -generate_leaf_getters
+  -generate_populate_defaults
   -structs_split_files_count=10
 )
 

@@ -11,7 +11,8 @@ require (
 	github.com/openconfig/gnmi v0.0.0-20210914185457-51254b657b7d
 	github.com/openconfig/gnoi v0.0.0-20211102203610-1ece8ed91a0d
 	github.com/openconfig/goyang v0.3.1
-	github.com/openconfig/ygot v0.12.5
+	github.com/openconfig/gribigo v0.0.0-20211117144123-9bcf5960a05d
+	github.com/openconfig/ygot v0.13.1
 	github.com/p4lang/p4runtime v1.3.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pborman/uuid v1.2.1
@@ -33,3 +34,5 @@ require (
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/genproto v0.0.0-20211129164237-f09f9a12af12 // indirect
 )
+
+replace github.com/openconfig/gribigo => github.com/wenovus/gribigo v0.0.0-20220107203937-1e25ad6a6149

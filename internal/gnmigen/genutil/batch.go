@@ -15,9 +15,10 @@
 package genutil
 
 import (
-	"golang.org/x/net/context"
 	"fmt"
 	"testing"
+
+	"golang.org/x/net/context"
 
 	"github.com/openconfig/ygot/ygot"
 
@@ -147,13 +148,25 @@ func populateSetRequest(req *gpb.SetRequest, path *gpb.Path, val interface{}, op
 	case replacePath, updatePath:
 		// Since the GoStructs are generated using preferOperationalState, we
 		// need to turn on preferShadowPath to prefer marshalling config paths.
-		js, err := ygot.Marshal7951(val, ygot.JSONIndent("  "), &ygot.RFC7951JSONConfig{AppendModuleName: true, PreferShadowPath: true})
-		if err != nil {
-			return fmt.Errorf("could not encode value into JSON format: %w", err)
-		}
-		update := &gpb.Update{
-			Path: path,
-			Val:  &gpb.TypedValue{Value: &gpb.TypedValue_JsonIetfVal{js}},
+		var update *gpb.Update
+		if _, ok := val.(ygot.GoStruct); ok {
+			js, err := ygot.Marshal7951(val, ygot.JSONIndent("  "), &ygot.RFC7951JSONConfig{AppendModuleName: true, PreferShadowPath: true})
+			if err != nil {
+				return fmt.Errorf("could not encode value into JSON format: %w", err)
+			}
+			update = &gpb.Update{
+				Path: path,
+				Val:  &gpb.TypedValue{Value: &gpb.TypedValue_JsonIetfVal{js}},
+			}
+		} else {
+			tv, err := ygot.EncodeTypedValue(val, gpb.Encoding_JSON_IETF)
+			if err != nil {
+				return fmt.Errorf("Could not encode leaf value: %v", err)
+			}
+			update = &gpb.Update{
+				Path: path,
+				Val:  tv,
+			}
 		}
 		switch op {
 		case replacePath:
