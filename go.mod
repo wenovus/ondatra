@@ -35,4 +35,6 @@ require (
 	google.golang.org/genproto v0.0.0-20211129164237-f09f9a12af12 // indirect
 )
 
-replace github.com/openconfig/gribigo => github.com/wenovus/gribigo v0.0.0-20220107203937-1e25ad6a6149
+replace github.com/openconfig/gnmi => github.com/wenovus/gnmi v0.0.0-20220114231359-cfbc69541310
+
+replace github.com/openconfig/gribigo => github.com/wenovus/gribigo v0.0.0-20220114232223-ee81f9935622
