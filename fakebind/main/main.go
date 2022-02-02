@@ -19,7 +19,7 @@ func init() {
 }
 
 func main() {
-	_, _, err := fakedevice.NewTarget(context.Background(), fmt.Sprintf("localhost:%d", *port), *target)
+	_, _, err := fakedevice.NewTarget(context.Background(), fmt.Sprintf(":%d", *port), *target)
 	if err != nil {
 		log.Fatal(err)
 	}
