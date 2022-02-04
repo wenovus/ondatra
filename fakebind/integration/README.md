@@ -6,6 +6,7 @@ future.
 
 ```bash
 # The name is temporary and will be changed once the image is registered.
+# Run this in repo root.
 docker build -t wenovus/fakeserver0 .
 kind load docker-image wenovus/fakeserver0 --name kne
 ```
