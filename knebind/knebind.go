@@ -16,24 +16,23 @@
 package knebind
 
 import (
-	"golang.org/x/net/context"
-	"crypto/tls"
 	"fmt"
 	"os/exec"
 	"sync"
 	"time"
 
+	"golang.org/x/net/context"
+
 	log "github.com/golang/glog"
-	"github.com/pkg/errors"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/encoding/prototext"
-	"github.com/pborman/uuid"
 	"github.com/openconfig/ondatra/internal/binding"
 	"github.com/openconfig/ondatra/internal/reservation"
+	"github.com/pborman/uuid"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/prototext"
 
-	gpb "github.com/openconfig/gnmi/proto/gnmi"
 	kpb "github.com/google/kne/proto/topo"
+	gpb "github.com/openconfig/gnmi/proto/gnmi"
 	opb "github.com/openconfig/ondatra/proto"
 )
 
@@ -47,6 +46,7 @@ var (
 		kpb.Node_JUNIPER_CEVO: opb.Device_JUNIPER,
 		kpb.Node_JUNIPER_VMX:  opb.Device_JUNIPER,
 		kpb.Node_IXIA_TG:      opb.Device_IXIA,
+		kpb.Node_FAKE:         opb.Device_FAKE,
 	}
 
 	fetchTopo = fetchTopology // to be stubbed out by tests
@@ -189,11 +189,13 @@ func (b *Bind) DialGNMI(ctx context.Context, dut *reservation.DUT, opts ...grpc.
 	addr := b.dut2GNMIAddr[dut]
 	log.Infof("Dialing GNMI dut %s@%s", dut.Name, addr)
 	opts = append(opts,
-		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})),
-		grpc.WithPerRPCCredentials(&passCred{
-			username: b.cfg.Username,
-			password: b.cfg.Password,
-		}))
+		grpc.WithInsecure(),
+		//grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})),
+		//grpc.WithPerRPCCredentials(&passCred{
+		//	username: b.cfg.Username,
+		//	password: b.cfg.Password,
+		//}),
+	)
 	conn, err := grpc.DialContext(ctx, addr, opts...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "DialContext(ctx, %s, %v)", addr, opts)
