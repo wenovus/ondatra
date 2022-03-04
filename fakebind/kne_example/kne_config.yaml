@@ -1,5 +1,0 @@
-username: netops
-password: n3t0ps
-topology: /usr/local/google/home/wenbli/gocode/src/github.com/wenovus/ondatra/fakebind/kne_example/2node-fake.textproto
-cli: /usr/local/google/home/wenbli/gocode/bin/kne_cli
-kubecfg: /usr/local/google/home/wenbli/.kube/config
