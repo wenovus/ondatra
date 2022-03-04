@@ -41,4 +41,4 @@ replace github.com/openconfig/gnmi => github.com/wenovus/gnmi v0.0.0-20220114231
 
 replace github.com/openconfig/gribigo => github.com/wenovus/gribigo v0.0.0-20220114232223-ee81f9935622
 
-replace github.com/google/kne => github.com/wenovus/kne v0.1.1-0.20220204002234-61ed8373e6a3
+replace github.com/google/kne => /usr/local/google/home/wenbli/gocode/src/github.com/wenovus/kne

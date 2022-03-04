@@ -18,3 +18,6 @@
 duts {
   id: "fakedut"
 }
+duts {
+  id: "fakedut2"
+}

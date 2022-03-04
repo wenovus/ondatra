@@ -1,0 +1,9 @@
+name: "2node-fake"
+nodes: {
+    name: "fakedut"
+    type: FAKE
+}
+nodes: {
+    name: "fakedut2"
+    type: FAKE
+}

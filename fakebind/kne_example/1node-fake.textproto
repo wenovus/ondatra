@@ -2,11 +2,4 @@ name: "1node-fake"
 nodes: {
     name: "fakedut"
     type: FAKE
-    services:{
-        key: 1234 
-        value: {
-            name: "gnmi"
-            inside: 1234
-        }
-    }
 }
