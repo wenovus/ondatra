@@ -12,6 +12,396 @@ import (
 	"github.com/openconfig/ygot/ygot"
 )
 
+// QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger is a *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger with a corresponding timestamp.
+type QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger struct {
+	*genutil.Metadata
+	val     *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger sample, erroring out if not present.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger sample.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger) SetVal(v *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger) *QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger samples.
+type CollectionNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger struct {
+	W    *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTriggerWatcher
+	Data []*QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTriggerWatcher observes a stream of *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger samples.
+type NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTriggerWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *NetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTriggerWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Global_LspBit_OverloadBit_ResetTrigger, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedNetworkInstance_Protocol_Isis_Global_Mpls is a *NetworkInstance_Protocol_Isis_Global_Mpls with a corresponding timestamp.
+type QualifiedNetworkInstance_Protocol_Isis_Global_Mpls struct {
+	*genutil.Metadata
+	val     *NetworkInstance_Protocol_Isis_Global_Mpls // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the *NetworkInstance_Protocol_Isis_Global_Mpls sample, erroring out if not present.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Global_Mpls {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Global_Mpls sample.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls) SetVal(v *NetworkInstance_Protocol_Isis_Global_Mpls) *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionNetworkInstance_Protocol_Isis_Global_Mpls is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Global_Mpls samples.
+type CollectionNetworkInstance_Protocol_Isis_Global_Mpls struct {
+	W    *NetworkInstance_Protocol_Isis_Global_MplsWatcher
+	Data []*QualifiedNetworkInstance_Protocol_Isis_Global_Mpls
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionNetworkInstance_Protocol_Isis_Global_Mpls) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Global_Mpls {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// NetworkInstance_Protocol_Isis_Global_MplsWatcher observes a stream of *NetworkInstance_Protocol_Isis_Global_Mpls samples.
+type NetworkInstance_Protocol_Isis_Global_MplsWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *NetworkInstance_Protocol_Isis_Global_MplsWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Global_Mpls, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync is a *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync with a corresponding timestamp.
+type QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync struct {
+	*genutil.Metadata
+	val     *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync sample, erroring out if not present.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync sample.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync) SetVal(v *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync) *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync samples.
+type CollectionNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync struct {
+	W    *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSyncWatcher
+	Data []*QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSyncWatcher observes a stream of *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync samples.
+type NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSyncWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *NetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSyncWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Global_Mpls_IgpLdpSync, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedNetworkInstance_Protocol_Isis_Global_Nsr is a *NetworkInstance_Protocol_Isis_Global_Nsr with a corresponding timestamp.
+type QualifiedNetworkInstance_Protocol_Isis_Global_Nsr struct {
+	*genutil.Metadata
+	val     *NetworkInstance_Protocol_Isis_Global_Nsr // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Nsr) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the *NetworkInstance_Protocol_Isis_Global_Nsr sample, erroring out if not present.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Nsr) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Global_Nsr {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Global_Nsr sample.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Nsr) SetVal(v *NetworkInstance_Protocol_Isis_Global_Nsr) *QualifiedNetworkInstance_Protocol_Isis_Global_Nsr {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_Nsr) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionNetworkInstance_Protocol_Isis_Global_Nsr is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Global_Nsr samples.
+type CollectionNetworkInstance_Protocol_Isis_Global_Nsr struct {
+	W    *NetworkInstance_Protocol_Isis_Global_NsrWatcher
+	Data []*QualifiedNetworkInstance_Protocol_Isis_Global_Nsr
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionNetworkInstance_Protocol_Isis_Global_Nsr) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Global_Nsr {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// NetworkInstance_Protocol_Isis_Global_NsrWatcher observes a stream of *NetworkInstance_Protocol_Isis_Global_Nsr samples.
+type NetworkInstance_Protocol_Isis_Global_NsrWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedNetworkInstance_Protocol_Isis_Global_Nsr
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *NetworkInstance_Protocol_Isis_Global_NsrWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Global_Nsr, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth is a *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidth with a corresponding timestamp.
+type QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth struct {
+	*genutil.Metadata
+	val     *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidth // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidth sample, erroring out if not present.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidth {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidth sample.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth) SetVal(v *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidth) *QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidth samples.
+type CollectionNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth struct {
+	W    *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidthWatcher
+	Data []*QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// NetworkInstance_Protocol_Isis_Global_ReferenceBandwidthWatcher observes a stream of *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidth samples.
+type NetworkInstance_Protocol_Isis_Global_ReferenceBandwidthWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *NetworkInstance_Protocol_Isis_Global_ReferenceBandwidthWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Global_ReferenceBandwidth, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting is a *NetworkInstance_Protocol_Isis_Global_SegmentRouting with a corresponding timestamp.
+type QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting struct {
+	*genutil.Metadata
+	val     *NetworkInstance_Protocol_Isis_Global_SegmentRouting // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the *NetworkInstance_Protocol_Isis_Global_SegmentRouting sample, erroring out if not present.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Global_SegmentRouting {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Global_SegmentRouting sample.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting) SetVal(v *NetworkInstance_Protocol_Isis_Global_SegmentRouting) *QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionNetworkInstance_Protocol_Isis_Global_SegmentRouting is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Global_SegmentRouting samples.
+type CollectionNetworkInstance_Protocol_Isis_Global_SegmentRouting struct {
+	W    *NetworkInstance_Protocol_Isis_Global_SegmentRoutingWatcher
+	Data []*QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionNetworkInstance_Protocol_Isis_Global_SegmentRouting) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// NetworkInstance_Protocol_Isis_Global_SegmentRoutingWatcher observes a stream of *NetworkInstance_Protocol_Isis_Global_SegmentRouting samples.
+type NetworkInstance_Protocol_Isis_Global_SegmentRoutingWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *NetworkInstance_Protocol_Isis_Global_SegmentRoutingWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Global_SegmentRouting, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
 // QualifiedNetworkInstance_Protocol_Isis_Global_Timers is a *NetworkInstance_Protocol_Isis_Global_Timers with a corresponding timestamp.
 type QualifiedNetworkInstance_Protocol_Isis_Global_Timers struct {
 	*genutil.Metadata
@@ -463,136 +853,6 @@ type NetworkInstance_Protocol_Isis_Interface_AuthenticationWatcher struct {
 // Await blocks until the Watch predicate is true or the duration elapses.
 // It returns the last value received and a boolean indicating whether it satisfies the predicate.
 func (w *NetworkInstance_Protocol_Isis_Interface_AuthenticationWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
-// QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key is a *NetworkInstance_Protocol_Isis_Interface_Authentication_Key with a corresponding timestamp.
-type QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key struct {
-	*genutil.Metadata
-	val     *NetworkInstance_Protocol_Isis_Interface_Authentication_Key // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the *NetworkInstance_Protocol_Isis_Interface_Authentication_Key sample, erroring out if not present.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Interface_Authentication_Key {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Interface_Authentication_Key sample.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key) SetVal(v *NetworkInstance_Protocol_Isis_Interface_Authentication_Key) *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionNetworkInstance_Protocol_Isis_Interface_Authentication_Key is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Interface_Authentication_Key samples.
-type CollectionNetworkInstance_Protocol_Isis_Interface_Authentication_Key struct {
-	W    *NetworkInstance_Protocol_Isis_Interface_Authentication_KeyWatcher
-	Data []*QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionNetworkInstance_Protocol_Isis_Interface_Authentication_Key) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// NetworkInstance_Protocol_Isis_Interface_Authentication_KeyWatcher observes a stream of *NetworkInstance_Protocol_Isis_Interface_Authentication_Key samples.
-type NetworkInstance_Protocol_Isis_Interface_Authentication_KeyWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *NetworkInstance_Protocol_Isis_Interface_Authentication_KeyWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Key, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
-// QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain is a *NetworkInstance_Protocol_Isis_Interface_Authentication_Keychain with a corresponding timestamp.
-type QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain struct {
-	*genutil.Metadata
-	val     *NetworkInstance_Protocol_Isis_Interface_Authentication_Keychain // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the *NetworkInstance_Protocol_Isis_Interface_Authentication_Keychain sample, erroring out if not present.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Interface_Authentication_Keychain {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Interface_Authentication_Keychain sample.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain) SetVal(v *NetworkInstance_Protocol_Isis_Interface_Authentication_Keychain) *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Interface_Authentication_Keychain samples.
-type CollectionNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain struct {
-	W    *NetworkInstance_Protocol_Isis_Interface_Authentication_KeychainWatcher
-	Data []*QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// NetworkInstance_Protocol_Isis_Interface_Authentication_KeychainWatcher observes a stream of *NetworkInstance_Protocol_Isis_Interface_Authentication_Keychain samples.
-type NetworkInstance_Protocol_Isis_Interface_Authentication_KeychainWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *NetworkInstance_Protocol_Isis_Interface_Authentication_KeychainWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Interface_Authentication_Keychain, bool) {
 	t.Helper()
 	return w.LastVal, w.W.Await(t)
 }
@@ -1308,136 +1568,6 @@ type NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthenticationWatcher st
 // Await blocks until the Watch predicate is true or the duration elapses.
 // It returns the last value received and a boolean indicating whether it satisfies the predicate.
 func (w *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthenticationWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
-// QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key is a *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key with a corresponding timestamp.
-type QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key struct {
-	*genutil.Metadata
-	val     *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key sample, erroring out if not present.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key sample.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key) SetVal(v *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key) *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key samples.
-type CollectionNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key struct {
-	W    *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_KeyWatcher
-	Data []*QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_KeyWatcher observes a stream of *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key samples.
-type NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_KeyWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_KeyWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Key, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
-// QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain is a *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain with a corresponding timestamp.
-type QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain struct {
-	*genutil.Metadata
-	val     *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain sample, erroring out if not present.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain sample.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain) SetVal(v *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain) *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain samples.
-type CollectionNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain struct {
-	W    *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_KeychainWatcher
-	Data []*QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_KeychainWatcher observes a stream of *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain samples.
-type NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_KeychainWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *NetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_KeychainWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Interface_Level_HelloAuthentication_Keychain, bool) {
 	t.Helper()
 	return w.LastVal, w.W.Await(t)
 }
@@ -2348,136 +2478,6 @@ type NetworkInstance_Protocol_Isis_Level_AuthenticationWatcher struct {
 // Await blocks until the Watch predicate is true or the duration elapses.
 // It returns the last value received and a boolean indicating whether it satisfies the predicate.
 func (w *NetworkInstance_Protocol_Isis_Level_AuthenticationWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Level_Authentication, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
-// QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key is a *NetworkInstance_Protocol_Isis_Level_Authentication_Key with a corresponding timestamp.
-type QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key struct {
-	*genutil.Metadata
-	val     *NetworkInstance_Protocol_Isis_Level_Authentication_Key // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the *NetworkInstance_Protocol_Isis_Level_Authentication_Key sample, erroring out if not present.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Level_Authentication_Key {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Level_Authentication_Key sample.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key) SetVal(v *NetworkInstance_Protocol_Isis_Level_Authentication_Key) *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionNetworkInstance_Protocol_Isis_Level_Authentication_Key is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Level_Authentication_Key samples.
-type CollectionNetworkInstance_Protocol_Isis_Level_Authentication_Key struct {
-	W    *NetworkInstance_Protocol_Isis_Level_Authentication_KeyWatcher
-	Data []*QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionNetworkInstance_Protocol_Isis_Level_Authentication_Key) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// NetworkInstance_Protocol_Isis_Level_Authentication_KeyWatcher observes a stream of *NetworkInstance_Protocol_Isis_Level_Authentication_Key samples.
-type NetworkInstance_Protocol_Isis_Level_Authentication_KeyWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *NetworkInstance_Protocol_Isis_Level_Authentication_KeyWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Key, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
-// QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain is a *NetworkInstance_Protocol_Isis_Level_Authentication_Keychain with a corresponding timestamp.
-type QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain struct {
-	*genutil.Metadata
-	val     *NetworkInstance_Protocol_Isis_Level_Authentication_Keychain // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the *NetworkInstance_Protocol_Isis_Level_Authentication_Keychain sample, erroring out if not present.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Level_Authentication_Keychain {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Level_Authentication_Keychain sample.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain) SetVal(v *NetworkInstance_Protocol_Isis_Level_Authentication_Keychain) *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionNetworkInstance_Protocol_Isis_Level_Authentication_Keychain is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Level_Authentication_Keychain samples.
-type CollectionNetworkInstance_Protocol_Isis_Level_Authentication_Keychain struct {
-	W    *NetworkInstance_Protocol_Isis_Level_Authentication_KeychainWatcher
-	Data []*QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionNetworkInstance_Protocol_Isis_Level_Authentication_Keychain) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// NetworkInstance_Protocol_Isis_Level_Authentication_KeychainWatcher observes a stream of *NetworkInstance_Protocol_Isis_Level_Authentication_Keychain samples.
-type NetworkInstance_Protocol_Isis_Level_Authentication_KeychainWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *NetworkInstance_Protocol_Isis_Level_Authentication_KeychainWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Level_Authentication_Keychain, bool) {
 	t.Helper()
 	return w.LastVal, w.W.Await(t)
 }
@@ -8523,6 +8523,71 @@ type NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_
 // Await blocks until the Watch predicate is true or the duration elapses.
 // It returns the last value received and a boolean indicating whether it satisfies the predicate.
 func (w *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AdminGroupWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AdminGroup, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth is a *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth with a corresponding timestamp.
+type QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth struct {
+	*genutil.Metadata
+	val     *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth sample, erroring out if not present.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth) Val(t testing.TB) *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth sample.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth) SetVal(v *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth) *QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth is a telemetry Collection whose Await method returns a slice of *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth samples.
+type CollectionNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth struct {
+	W    *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidthWatcher
+	Data []*QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth) Await(t testing.TB) []*QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidthWatcher observes a stream of *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth samples.
+type NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidthWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *NetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidthWatcher) Await(t testing.TB) (*QualifiedNetworkInstance_Protocol_Isis_Level_Lsp_Tlv_IsisNeighborAttribute_Neighbor_Instance_Subtlv_AvailableBandwidth, bool) {
 	t.Helper()
 	return w.LastVal, w.W.Await(t)
 }

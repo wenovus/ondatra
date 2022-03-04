@@ -21,24 +21,43 @@ import (
 	"io/ioutil"
 	"regexp"
 	"sync"
-	"time"
 
+	log "github.com/golang/glog"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/prototext"
-	"github.com/openconfig/ondatra/internal/binding"
-	"github.com/openconfig/ondatra/internal/reservation"
-	"github.com/openconfig/ondatra/internal/usererr"
+	"github.com/openconfig/ondatra/binding"
+	"github.com/openconfig/ondatra/binding/usererr"
+	"github.com/openconfig/ondatra/internal/flags"
 
 	opb "github.com/openconfig/ondatra/proto"
 )
 
 var (
-	resMu sync.RWMutex
-	res   *reservation.Reservation
+	resMu   sync.RWMutex
+	res     *binding.Reservation
+	fetched bool
+
+	bind binding.Binding
 )
 
+// InitBind initializes the Ondatra binding.
+func InitBind(b binding.Binding) {
+	if bind != nil {
+		log.Fatalf("Binding already initialized")
+	}
+	bind = b
+}
+
+// Bind returns the Ondatra binding.
+func Bind() binding.Binding {
+	if bind == nil {
+		log.Exit("Binding not initialized. Did you forget to call ondatra.RunTests in TestMain?")
+	}
+	return bind
+}
+
 // Reservation returns the current reservation.
-func Reservation() (*reservation.Reservation, error) {
+func Reservation() (*binding.Reservation, error) {
 	resMu.RLock()
 	defer resMu.RUnlock()
 	if res == nil {
@@ -47,35 +66,32 @@ func Reservation() (*reservation.Reservation, error) {
 	return res, nil
 }
 
-// Reserve reserves a testbed, typically reading its definition for the test.
-func Reserve(ctx context.Context, testbedPath string, runTime, waitTime time.Duration) error {
-	if testbedPath == "" {
-		return errors.New("testbed path not specified")
-	}
-	if runTime < 0 {
-		return errors.Errorf("run timeout is negative: %d", runTime)
-	}
-	if waitTime < 0 {
-		return errors.Errorf("wait timeout is negative: %d", waitTime)
-	}
+// Reserve reserves the testbed.
+func Reserve(ctx context.Context, fv *flags.Values) error {
 	resMu.Lock()
 	defer resMu.Unlock()
 	if res != nil {
 		return errors.New("testbed is already reserved; RunTests was already called")
 	}
 	tb := &opb.Testbed{}
-	s, err := ioutil.ReadFile(testbedPath)
+	s, err := ioutil.ReadFile(fv.TestbedPath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read testbed proto %s", testbedPath)
+		return usererr.Wrapf(err, "failed to read testbed proto %s", fv.TestbedPath)
 	}
-	err = prototext.Unmarshal(s, tb)
-	if err != nil {
-		return errors.Wrapf(err, "failed to parse testbed proto %s", testbedPath)
+	if err := prototext.Unmarshal(s, tb); err != nil {
+		return usererr.Wrapf(err, "failed to parse testbed proto %s", fv.TestbedPath)
 	}
 	if err := validateTB(tb); err != nil {
 		return err
 	}
-	r, err := binding.Get().Reserve(ctx, tb, runTime, waitTime)
+
+	var r *binding.Reservation
+	if fv.ResvID == "" {
+		r, err = Bind().Reserve(ctx, tb, fv.RunTime, fv.WaitTime, fv.ResvPartial)
+	} else {
+		r, err = Bind().FetchReservation(ctx, fv.ResvID)
+		fetched = true
+	}
 	if err != nil {
 		return err
 	}
@@ -140,9 +156,9 @@ func checkID(id string) error {
 	return nil
 }
 
-func validateRes(tb *opb.Testbed, res *reservation.Reservation) error {
+func validateRes(tb *opb.Testbed, res *binding.Reservation) error {
 	for _, dut := range tb.GetDuts() {
-		rd, err := res.DUT(dut.GetId())
+		rd, err := DUT(res, dut.GetId())
 		if err != nil {
 			return err
 		}
@@ -151,7 +167,7 @@ func validateRes(tb *opb.Testbed, res *reservation.Reservation) error {
 		}
 	}
 	for _, ate := range tb.GetAtes() {
-		ra, err := res.ATE(ate.GetId())
+		ra, err := ATE(res, ate.GetId())
 		if err != nil {
 			return err
 		}
@@ -162,13 +178,13 @@ func validateRes(tb *opb.Testbed, res *reservation.Reservation) error {
 	return nil
 }
 
-func validateDevice(dev *opb.Device, rd reservation.Device) error {
+func validateDevice(dev *opb.Device, rd binding.Device) error {
 	dims := rd.Dimensions()
 	if dims.Name == "" {
 		return errors.Errorf("no name for reserved device: %v", rd)
 	}
 	for _, p := range dev.GetPorts() {
-		rp, err := dims.Port(p.GetId())
+		rp, err := Port(dims, p.GetId())
 		if err != nil {
 			return err
 		}
@@ -179,13 +195,49 @@ func validateDevice(dev *opb.Device, rd reservation.Device) error {
 	return nil
 }
 
-// Release releases the testbed.
+// Release releases the testbed. This is a noop if the reservation is not
+// currently reserved or if the reservation was fetched and not created.
 func Release(ctx context.Context) error {
 	resMu.Lock()
 	defer resMu.Unlock()
-	if res == nil {
+	if res == nil || fetched {
 		return nil
 	}
 	res = nil
-	return binding.Get().Release(ctx)
+	return Bind().Release(ctx)
+}
+
+// Device returns the Device in the specified reservation with the specified ID.
+func Device(res *binding.Reservation, id string) (binding.Device, error) {
+	if d, err := DUT(res, id); err == nil { // if NO error
+		return d, nil
+	}
+	if a, err := ATE(res, id); err == nil { // if NO error
+		return a, nil
+	}
+	return nil, errors.Errorf("device ID %s not found in the reservation", id)
+}
+
+// DUT returns the DUT in the specified reservation with the specified ID.
+func DUT(res *binding.Reservation, id string) (*binding.DUT, error) {
+	if d, ok := res.DUTs[id]; ok {
+		return d, nil
+	}
+	return nil, errors.Errorf("DUT ID %s not found in the reservation", id)
+}
+
+// ATE returns the ATE in the specified reservation with the specified ID.
+func ATE(res *binding.Reservation, id string) (*binding.ATE, error) {
+	if a, ok := res.ATEs[id]; ok {
+		return a, nil
+	}
+	return nil, errors.Errorf("ATE ID %s not found in the reservation", id)
+}
+
+// Port returns the port in the specified dimensions with the specified ID.
+func Port(dims *binding.Dims, id string) (*binding.Port, error) {
+	if p, ok := dims.Ports[id]; ok {
+		return p, nil
+	}
+	return nil, errors.Errorf("port ID %s not found in reserved device %s", id, dims.Name)
 }

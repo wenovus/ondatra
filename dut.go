@@ -19,17 +19,18 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/openconfig/ondatra/binding"
 	"github.com/openconfig/ondatra/config/device"
-	"github.com/openconfig/ondatra/internal/binding"
 	"github.com/openconfig/ondatra/internal/cli"
 	"github.com/openconfig/ondatra/internal/console"
 	"github.com/openconfig/ondatra/internal/dut"
 	"github.com/openconfig/ondatra/internal/gnmigen/genutil"
+	"github.com/openconfig/ondatra/internal/gribi"
 	"github.com/openconfig/ondatra/internal/operations"
 	"github.com/openconfig/ondatra/internal/p4rt"
-	"github.com/openconfig/ondatra/internal/reservation"
 
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
+	grpb "github.com/openconfig/gribi/v1/proto/service"
 	opb "github.com/openconfig/ondatra/proto"
 	p4pb "github.com/p4lang/p4runtime/go/p4/v1"
 
@@ -46,14 +47,14 @@ func (d *DUTDevice) Config() *Config {
 	// TODO: Add field to root node in ygot instead of using custom data.
 	dev.PutCustomData(genutil.DefaultClientKey, d.Device.clientFn)
 	return &Config{
-		dut:        d.res.(*reservation.DUT),
+		dut:        d.res.(*binding.DUT),
 		DevicePath: dev,
 	}
 }
 
 // Config is the DUT configuration API.
 type Config struct {
-	dut *reservation.DUT
+	dut *binding.DUT
 	*device.DevicePath
 }
 
@@ -62,15 +63,15 @@ func (a *Config) New() *DUTConfig {
 	return &DUTConfig{
 		dut: a.dut,
 		cfg: &dut.Config{
-			VC:   make(map[opb.Device_Vendor]dut.ConfigProvider),
-			Vars: make(map[string]string),
+			PerVendor: make(map[opb.Device_Vendor]dut.ConfigProvider),
+			Vars:      make(map[string]string),
 		},
 	}
 }
 
 // DUTConfig is a configuration of a device under test.
 type DUTConfig struct {
-	dut *reservation.DUT
+	dut *binding.DUT
 	cfg *dut.Config
 }
 
@@ -78,53 +79,55 @@ func (c *DUTConfig) String() string {
 	return fmt.Sprintf("DUTConfig%+v", *c)
 }
 
-// WithAristaText sets the config to be pushed to an Arista device.
+// WithText sets the config to be pushed regardless of the DUT vendor.
+// This should only be used when the DUT vendor was already taken into account
+// in the generation of the config and only when no per-vendor configs are set.
+func (c *DUTConfig) WithText(text string) *DUTConfig {
+	c.cfg.AllVendor = dut.ConfigText(text)
+	return c
+}
+
+// WithAristaText sets the config to be pushed if the DUT vendor is Arista.
 func (c *DUTConfig) WithAristaText(text string) *DUTConfig {
-	c.cfg.VC[opb.Device_ARISTA] = dut.ConfigText(text)
+	c.cfg.PerVendor[opb.Device_ARISTA] = dut.ConfigText(text)
 	return c
 }
 
-// WithCiscoText sets the config to be pushed to a Cisco device.
+// WithCiscoText sets the config to be pushed if the DUT vendor is Cisco.
 func (c *DUTConfig) WithCiscoText(text string) *DUTConfig {
-	c.cfg.VC[opb.Device_CISCO] = dut.ConfigText(text)
+	c.cfg.PerVendor[opb.Device_CISCO] = dut.ConfigText(text)
 	return c
 }
 
-// WithJuniperText sets the config to be pushed to a Juniper device.
+// WithJuniperText sets the config to be pushed if the DUT vendor is Juniper.
 func (c *DUTConfig) WithJuniperText(text string) *DUTConfig {
-	c.cfg.VC[opb.Device_JUNIPER] = dut.ConfigText(text)
+	c.cfg.PerVendor[opb.Device_JUNIPER] = dut.ConfigText(text)
 	return c
 }
 
-// WithOpenConfigText sets the openconfig to be pushed to a device
-// if no vendor-specific configuration has been set.
-func (c *DUTConfig) WithOpenConfigText(text string) *DUTConfig {
-	c.cfg.Open = dut.ConfigText(text)
+// WithFile sets the config to be pushed regardless of the DUT vendor.
+// This should only be used when the DUT vendor was already taken into account
+// in the generation of the config and only when no per-vendor configs are set.
+func (c *DUTConfig) WithFile(path string) *DUTConfig {
+	c.cfg.AllVendor = dut.ConfigFile(path)
 	return c
 }
 
-// WithAristaFile sets the config to be pushed to an Arista device.
+// WithAristaFile sets the config to be pushed if the DUT vendor is Arista.
 func (c *DUTConfig) WithAristaFile(path string) *DUTConfig {
-	c.cfg.VC[opb.Device_ARISTA] = dut.ConfigFile(path)
+	c.cfg.PerVendor[opb.Device_ARISTA] = dut.ConfigFile(path)
 	return c
 }
 
-// WithCiscoFile sets the config to be pushed to a Cisco device.
+// WithCiscoFile sets the config to be pushed if the DUT vendor is Cisco.
 func (c *DUTConfig) WithCiscoFile(path string) *DUTConfig {
-	c.cfg.VC[opb.Device_CISCO] = dut.ConfigFile(path)
+	c.cfg.PerVendor[opb.Device_CISCO] = dut.ConfigFile(path)
 	return c
 }
 
-// WithJuniperFile sets the config to be pushed to a Juniper device.
+// WithJuniperFile sets the config to be pushed if the DUT vendor is Juniper.
 func (c *DUTConfig) WithJuniperFile(path string) *DUTConfig {
-	c.cfg.VC[opb.Device_JUNIPER] = dut.ConfigFile(path)
-	return c
-}
-
-// WithOpenConfigFile sets the openconfig to be pushed to a device
-// if no vendor-specific configuration has been set.
-func (c *DUTConfig) WithOpenConfigFile(path string) *DUTConfig {
-	c.cfg.Open = dut.ConfigFile(path)
+	c.cfg.PerVendor[opb.Device_JUNIPER] = dut.ConfigFile(path)
 	return c
 }
 
@@ -141,36 +144,32 @@ func (c *DUTConfig) WithVarMap(m map[string]string) *DUTConfig {
 	return c
 }
 
-// Push replaces the config on the device with the specified config, prepended with the device's base config.
-// It pushes vendor config to the device if it has been set; otherwise, it attempts to push openconfig.
-// If neither vendor config nor openconfig has been specified, it fails the test.
+// Push resets the device to its base config and appends the specified config.
 func (c *DUTConfig) Push(t testing.TB) {
 	t.Helper()
 	logAction(t, "Pushing config to %s", c.dut)
-	if err := dut.PushConfig(context.Background(), c.dut, c.cfg, false); err != nil {
+	if err := dut.PushConfig(context.Background(), c.dut, c.cfg, true); err != nil {
 		t.Fatalf("Push(t) on %s: %v", c.dut, err)
 	}
 }
 
-// Append appends the specific config to the device's current config.
-// It pushes vendor config to the device if it has been set; otherwise, it attempts to push openconfig.
-// If neither vendor config nor openconfig has been specified, it fails the test.
+// Append appends the specified config to the current config.
 func (c *DUTConfig) Append(t testing.TB) {
 	t.Helper()
 	logAction(t, "Appending config to %s", c.dut)
-	if err := dut.PushConfig(context.Background(), c.dut, c.cfg, true); err != nil {
+	if err := dut.PushConfig(context.Background(), c.dut, c.cfg, false); err != nil {
 		t.Fatalf("Append(t) on %s: %v", c.dut, err)
 	}
 }
 
 // RawAPIs returns a handle to raw protocol APIs on the DUT.
 func (d *DUTDevice) RawAPIs() *RawAPIs {
-	return &RawAPIs{dut: d.res.(*reservation.DUT)}
+	return &RawAPIs{dut: d.res.(*binding.DUT)}
 }
 
 // RawAPIs provides access to raw DUT protocols APIs.
 type RawAPIs struct {
-	dut *reservation.DUT
+	dut *binding.DUT
 }
 
 // GNMI provides access to either a new or default gNMI client.
@@ -183,14 +182,24 @@ func (r *RawAPIs) GNOI() *GNOIAPI {
 	return &GNOIAPI{dut: r.dut}
 }
 
+// GRIBI provides access to either a new or default GRIBI client.
+func (r *RawAPIs) GRIBI() *GRIBIAPI {
+	return &GRIBIAPI{dut: r.dut}
+}
+
 // GNMIAPI provides access for creating a default or new gNMI client on the DUT.
 type GNMIAPI struct {
-	dut *reservation.DUT
+	dut *binding.DUT
 }
 
 // GNOIAPI provides access for creating a default or new gNOI client on the DUT.
 type GNOIAPI struct {
-	dut *reservation.DUT
+	dut *binding.DUT
+}
+
+// GRIBIAPI provides access for creating a default or new GRIBI client on the DUT.
+type GRIBIAPI struct {
+	dut *binding.DUT
 }
 
 // New returns a new gNMI client on the DUT. This client will not be cached.
@@ -235,6 +244,28 @@ func (g *GNOIAPI) Default(t testing.TB) GNOI {
 		t.Fatalf("GNOI(t) on %v: %v", g.dut, err)
 	}
 	return bgnoi
+}
+
+// New returns a new gRIBI client on the DUT.
+func (g *GRIBIAPI) New(t testing.TB) grpb.GRIBIClient {
+	t.Helper()
+	logAction(t, "Creating gRIBI client for %s", g.dut)
+	grc, err := gribi.NewGRIBI(context.Background(), g.dut)
+	if err != nil {
+		t.Fatalf("GRIBI(t) on %v: %v", g.dut, err)
+	}
+	return grc
+}
+
+// Default returns the default gRIBI client for the DUT.
+func (g *GRIBIAPI) Default(t testing.TB) grpb.GRIBIClient {
+	t.Helper()
+	logAction(t, "Fetching gRIBI client for %s", g.dut)
+	grc, err := gribi.FetchGRIBI(context.Background(), g.dut)
+	if err != nil {
+		t.Fatalf("GRIBI(t) on %v: %v", g.dut, err)
+	}
+	return grc
 }
 
 // GNOI stores gNOI clients to a DUT.

@@ -15,6 +15,212 @@ import (
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
 )
 
+// Lookup fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy with a ONCE subscription.
+// It returns nil if there is no value present at the path.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath) Lookup(t testing.TB) *oc.QualifiedE_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	goStruct := &oc.NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy{}
+	md, ok := oc.Lookup(t, n, "NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy", goStruct, true, true)
+	if ok {
+		return convertNetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath(t, md, goStruct)
+	}
+	return (&oc.QualifiedE_RoutingPolicy_DefaultPolicyType{
+		Metadata: md,
+	}).SetVal(goStruct.GetDefaultExportPolicy())
+}
+
+// Get fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy with a ONCE subscription,
+// failing the test fatally is no value is present at the path.
+// To avoid a fatal test failure, use the Lookup method instead.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath) Get(t testing.TB) oc.E_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	return n.Lookup(t).Val(t)
+}
+
+// Lookup fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy with a ONCE subscription.
+// It returns an empty list if no values are present at the path.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPathAny) Lookup(t testing.TB) []*oc.QualifiedE_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	datapoints, queryPath := genutil.MustGet(t, n)
+	datapointGroups, sortedPrefixes := genutil.BundleDatapoints(t, datapoints, uint(len(queryPath.Elem)))
+
+	var data []*oc.QualifiedE_RoutingPolicy_DefaultPolicyType
+	for _, prefix := range sortedPrefixes {
+		goStruct := &oc.NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy{}
+		md, ok := genutil.MustUnmarshal(t, datapointGroups[prefix], oc.GetSchema(), "NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy", goStruct, queryPath, true, true)
+		if !ok {
+			continue
+		}
+		qv := convertNetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath(t, md, goStruct)
+		data = append(data, qv)
+	}
+	return data
+}
+
+// Get fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy with a ONCE subscription.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPathAny) Get(t testing.TB) []oc.E_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	fulldata := n.Lookup(t)
+	var data []oc.E_RoutingPolicy_DefaultPolicyType
+	for _, full := range fulldata {
+		data = append(data, full.Val(t))
+	}
+	return data
+}
+
+// Delete deletes the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath) Delete(t testing.TB) *gpb.SetResponse {
+	t.Helper()
+	return genutil.Delete(t, n)
+}
+
+// BatchDelete buffers a config delete operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy in the given batch object.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath) BatchDelete(t testing.TB, b *config.SetRequestBatch) {
+	t.Helper()
+	b.BatchDelete(t, n)
+}
+
+// Replace replaces the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath) Replace(t testing.TB, val oc.E_RoutingPolicy_DefaultPolicyType) *gpb.SetResponse {
+	t.Helper()
+	return genutil.Replace(t, n, val)
+}
+
+// BatchReplace buffers a config replace operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy in the given batch object.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath) BatchReplace(t testing.TB, b *config.SetRequestBatch, val oc.E_RoutingPolicy_DefaultPolicyType) {
+	t.Helper()
+	b.BatchReplace(t, n, val)
+}
+
+// Update updates the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath) Update(t testing.TB, val oc.E_RoutingPolicy_DefaultPolicyType) *gpb.SetResponse {
+	t.Helper()
+	return genutil.Update(t, n, val)
+}
+
+// BatchUpdate buffers a config update operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-export-policy in the given batch object.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath) BatchUpdate(t testing.TB, b *config.SetRequestBatch, val oc.E_RoutingPolicy_DefaultPolicyType) {
+	t.Helper()
+	b.BatchUpdate(t, n, val)
+}
+
+// convertNetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath extracts the value of the leaf DefaultExportPolicy from its parent oc.NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy
+// and combines the update with an existing Metadata to return a *oc.QualifiedE_RoutingPolicy_DefaultPolicyType.
+func convertNetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultExportPolicyPath(t testing.TB, md *genutil.Metadata, parent *oc.NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy) *oc.QualifiedE_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	qv := &oc.QualifiedE_RoutingPolicy_DefaultPolicyType{
+		Metadata: md,
+	}
+	val := parent.DefaultExportPolicy
+	if !reflect.ValueOf(val).IsZero() {
+		qv.SetVal(val)
+	}
+	return qv
+}
+
+// Lookup fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy with a ONCE subscription.
+// It returns nil if there is no value present at the path.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath) Lookup(t testing.TB) *oc.QualifiedE_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	goStruct := &oc.NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy{}
+	md, ok := oc.Lookup(t, n, "NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy", goStruct, true, true)
+	if ok {
+		return convertNetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath(t, md, goStruct)
+	}
+	return (&oc.QualifiedE_RoutingPolicy_DefaultPolicyType{
+		Metadata: md,
+	}).SetVal(goStruct.GetDefaultImportPolicy())
+}
+
+// Get fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy with a ONCE subscription,
+// failing the test fatally is no value is present at the path.
+// To avoid a fatal test failure, use the Lookup method instead.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath) Get(t testing.TB) oc.E_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	return n.Lookup(t).Val(t)
+}
+
+// Lookup fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy with a ONCE subscription.
+// It returns an empty list if no values are present at the path.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPathAny) Lookup(t testing.TB) []*oc.QualifiedE_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	datapoints, queryPath := genutil.MustGet(t, n)
+	datapointGroups, sortedPrefixes := genutil.BundleDatapoints(t, datapoints, uint(len(queryPath.Elem)))
+
+	var data []*oc.QualifiedE_RoutingPolicy_DefaultPolicyType
+	for _, prefix := range sortedPrefixes {
+		goStruct := &oc.NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy{}
+		md, ok := genutil.MustUnmarshal(t, datapointGroups[prefix], oc.GetSchema(), "NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy", goStruct, queryPath, true, true)
+		if !ok {
+			continue
+		}
+		qv := convertNetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath(t, md, goStruct)
+		data = append(data, qv)
+	}
+	return data
+}
+
+// Get fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy with a ONCE subscription.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPathAny) Get(t testing.TB) []oc.E_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	fulldata := n.Lookup(t)
+	var data []oc.E_RoutingPolicy_DefaultPolicyType
+	for _, full := range fulldata {
+		data = append(data, full.Val(t))
+	}
+	return data
+}
+
+// Delete deletes the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath) Delete(t testing.TB) *gpb.SetResponse {
+	t.Helper()
+	return genutil.Delete(t, n)
+}
+
+// BatchDelete buffers a config delete operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy in the given batch object.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath) BatchDelete(t testing.TB, b *config.SetRequestBatch) {
+	t.Helper()
+	b.BatchDelete(t, n)
+}
+
+// Replace replaces the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath) Replace(t testing.TB, val oc.E_RoutingPolicy_DefaultPolicyType) *gpb.SetResponse {
+	t.Helper()
+	return genutil.Replace(t, n, val)
+}
+
+// BatchReplace buffers a config replace operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy in the given batch object.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath) BatchReplace(t testing.TB, b *config.SetRequestBatch, val oc.E_RoutingPolicy_DefaultPolicyType) {
+	t.Helper()
+	b.BatchReplace(t, n, val)
+}
+
+// Update updates the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath) Update(t testing.TB, val oc.E_RoutingPolicy_DefaultPolicyType) *gpb.SetResponse {
+	t.Helper()
+	return genutil.Update(t, n, val)
+}
+
+// BatchUpdate buffers a config update operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/default-import-policy in the given batch object.
+func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath) BatchUpdate(t testing.TB, b *config.SetRequestBatch, val oc.E_RoutingPolicy_DefaultPolicyType) {
+	t.Helper()
+	b.BatchUpdate(t, n, val)
+}
+
+// convertNetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath extracts the value of the leaf DefaultImportPolicy from its parent oc.NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy
+// and combines the update with an existing Metadata to return a *oc.QualifiedE_RoutingPolicy_DefaultPolicyType.
+func convertNetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_DefaultImportPolicyPath(t testing.TB, md *genutil.Metadata, parent *oc.NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy) *oc.QualifiedE_RoutingPolicy_DefaultPolicyType {
+	t.Helper()
+	qv := &oc.QualifiedE_RoutingPolicy_DefaultPolicyType{
+		Metadata: md,
+	}
+	val := parent.DefaultImportPolicy
+	if !reflect.ValueOf(val).IsZero() {
+		qv.SetVal(val)
+	}
+	return qv
+}
+
 // Lookup fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/apply-policy/config/export-policy with a ONCE subscription.
 // It returns nil if there is no value present at the path.
 func (n *NetworkInstance_Protocol_Bgp_PeerGroup_AfiSafi_ApplyPolicy_ExportPolicyPath) Lookup(t testing.TB) *oc.QualifiedStringSlice {
@@ -17899,6 +18105,109 @@ func convertNetworkInstance_Protocol_Isis_Global_GracefulRestart_HelperOnlyPath(
 	return qv
 }
 
+// Lookup fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding with a ONCE subscription.
+// It returns nil if there is no value present at the path.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPath) Lookup(t testing.TB) *oc.QualifiedE_IsisTypes_HelloPaddingType {
+	t.Helper()
+	goStruct := &oc.NetworkInstance_Protocol_Isis_Global{}
+	md, ok := oc.Lookup(t, n, "NetworkInstance_Protocol_Isis_Global", goStruct, true, true)
+	if ok {
+		return convertNetworkInstance_Protocol_Isis_Global_HelloPaddingPath(t, md, goStruct)
+	}
+	return (&oc.QualifiedE_IsisTypes_HelloPaddingType{
+		Metadata: md,
+	}).SetVal(goStruct.GetHelloPadding())
+}
+
+// Get fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding with a ONCE subscription,
+// failing the test fatally is no value is present at the path.
+// To avoid a fatal test failure, use the Lookup method instead.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPath) Get(t testing.TB) oc.E_IsisTypes_HelloPaddingType {
+	t.Helper()
+	return n.Lookup(t).Val(t)
+}
+
+// Lookup fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding with a ONCE subscription.
+// It returns an empty list if no values are present at the path.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPathAny) Lookup(t testing.TB) []*oc.QualifiedE_IsisTypes_HelloPaddingType {
+	t.Helper()
+	datapoints, queryPath := genutil.MustGet(t, n)
+	datapointGroups, sortedPrefixes := genutil.BundleDatapoints(t, datapoints, uint(len(queryPath.Elem)))
+
+	var data []*oc.QualifiedE_IsisTypes_HelloPaddingType
+	for _, prefix := range sortedPrefixes {
+		goStruct := &oc.NetworkInstance_Protocol_Isis_Global{}
+		md, ok := genutil.MustUnmarshal(t, datapointGroups[prefix], oc.GetSchema(), "NetworkInstance_Protocol_Isis_Global", goStruct, queryPath, true, true)
+		if !ok {
+			continue
+		}
+		qv := convertNetworkInstance_Protocol_Isis_Global_HelloPaddingPath(t, md, goStruct)
+		data = append(data, qv)
+	}
+	return data
+}
+
+// Get fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding with a ONCE subscription.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPathAny) Get(t testing.TB) []oc.E_IsisTypes_HelloPaddingType {
+	t.Helper()
+	fulldata := n.Lookup(t)
+	var data []oc.E_IsisTypes_HelloPaddingType
+	for _, full := range fulldata {
+		data = append(data, full.Val(t))
+	}
+	return data
+}
+
+// Delete deletes the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPath) Delete(t testing.TB) *gpb.SetResponse {
+	t.Helper()
+	return genutil.Delete(t, n)
+}
+
+// BatchDelete buffers a config delete operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding in the given batch object.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPath) BatchDelete(t testing.TB, b *config.SetRequestBatch) {
+	t.Helper()
+	b.BatchDelete(t, n)
+}
+
+// Replace replaces the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPath) Replace(t testing.TB, val oc.E_IsisTypes_HelloPaddingType) *gpb.SetResponse {
+	t.Helper()
+	return genutil.Replace(t, n, val)
+}
+
+// BatchReplace buffers a config replace operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding in the given batch object.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPath) BatchReplace(t testing.TB, b *config.SetRequestBatch, val oc.E_IsisTypes_HelloPaddingType) {
+	t.Helper()
+	b.BatchReplace(t, n, val)
+}
+
+// Update updates the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPath) Update(t testing.TB, val oc.E_IsisTypes_HelloPaddingType) *gpb.SetResponse {
+	t.Helper()
+	return genutil.Update(t, n, val)
+}
+
+// BatchUpdate buffers a config update operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/hello-padding in the given batch object.
+func (n *NetworkInstance_Protocol_Isis_Global_HelloPaddingPath) BatchUpdate(t testing.TB, b *config.SetRequestBatch, val oc.E_IsisTypes_HelloPaddingType) {
+	t.Helper()
+	b.BatchUpdate(t, n, val)
+}
+
+// convertNetworkInstance_Protocol_Isis_Global_HelloPaddingPath extracts the value of the leaf HelloPadding from its parent oc.NetworkInstance_Protocol_Isis_Global
+// and combines the update with an existing Metadata to return a *oc.QualifiedE_IsisTypes_HelloPaddingType.
+func convertNetworkInstance_Protocol_Isis_Global_HelloPaddingPath(t testing.TB, md *genutil.Metadata, parent *oc.NetworkInstance_Protocol_Isis_Global) *oc.QualifiedE_IsisTypes_HelloPaddingType {
+	t.Helper()
+	qv := &oc.QualifiedE_IsisTypes_HelloPaddingType{
+		Metadata: md,
+	}
+	val := parent.HelloPadding
+	if !reflect.ValueOf(val).IsZero() {
+		qv.SetVal(val)
+	}
+	return qv
+}
+
 // Lookup fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/config/iid-tlv with a ONCE subscription.
 // It returns nil if there is no value present at the path.
 func (n *NetworkInstance_Protocol_Isis_Global_IidTlvPath) Lookup(t testing.TB) *oc.QualifiedBool {
@@ -22227,301 +22536,6 @@ func convertNetworkInstance_Protocol_Isis_Global_Timers_LspRefreshIntervalPath(t
 		Metadata: md,
 	}
 	val := parent.LspRefreshInterval
-	if !reflect.ValueOf(val).IsZero() {
-		qv.SetVal(*val)
-	}
-	return qv
-}
-
-// Lookup fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf with a ONCE subscription.
-// It returns nil if there is no value present at the path.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPath) Lookup(t testing.TB) *oc.QualifiedNetworkInstance_Protocol_Isis_Global_Timers_Spf {
-	t.Helper()
-	goStruct := &oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf{}
-	md, ok := oc.Lookup(t, n, "NetworkInstance_Protocol_Isis_Global_Timers_Spf", goStruct, false, true)
-	if ok {
-		return (&oc.QualifiedNetworkInstance_Protocol_Isis_Global_Timers_Spf{
-			Metadata: md,
-		}).SetVal(goStruct)
-	}
-	return nil
-}
-
-// Get fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf with a ONCE subscription,
-// failing the test fatally is no value is present at the path.
-// To avoid a fatal test failure, use the Lookup method instead.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPath) Get(t testing.TB) *oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf {
-	t.Helper()
-	return n.Lookup(t).Val(t)
-}
-
-// Lookup fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf with a ONCE subscription.
-// It returns an empty list if no values are present at the path.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPathAny) Lookup(t testing.TB) []*oc.QualifiedNetworkInstance_Protocol_Isis_Global_Timers_Spf {
-	t.Helper()
-	datapoints, queryPath := genutil.MustGet(t, n)
-	datapointGroups, sortedPrefixes := genutil.BundleDatapoints(t, datapoints, uint(len(queryPath.Elem)))
-
-	var data []*oc.QualifiedNetworkInstance_Protocol_Isis_Global_Timers_Spf
-	for _, prefix := range sortedPrefixes {
-		goStruct := &oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf{}
-		md, ok := genutil.MustUnmarshal(t, datapointGroups[prefix], oc.GetSchema(), "NetworkInstance_Protocol_Isis_Global_Timers_Spf", goStruct, queryPath, false, true)
-		if !ok {
-			continue
-		}
-		qv := (&oc.QualifiedNetworkInstance_Protocol_Isis_Global_Timers_Spf{
-			Metadata: md,
-		}).SetVal(goStruct)
-		data = append(data, qv)
-	}
-	return data
-}
-
-// Get fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf with a ONCE subscription.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPathAny) Get(t testing.TB) []*oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf {
-	t.Helper()
-	fulldata := n.Lookup(t)
-	var data []*oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf
-	for _, full := range fulldata {
-		data = append(data, full.Val(t))
-	}
-	return data
-}
-
-// Delete deletes the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPath) Delete(t testing.TB) *gpb.SetResponse {
-	t.Helper()
-	return genutil.Delete(t, n)
-}
-
-// BatchDelete buffers a config delete operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf in the given batch object.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPath) BatchDelete(t testing.TB, b *config.SetRequestBatch) {
-	t.Helper()
-	b.BatchDelete(t, n)
-}
-
-// Replace replaces the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPath) Replace(t testing.TB, val *oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf) *gpb.SetResponse {
-	t.Helper()
-	return genutil.Replace(t, n, val)
-}
-
-// BatchReplace buffers a config replace operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf in the given batch object.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPath) BatchReplace(t testing.TB, b *config.SetRequestBatch, val *oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf) {
-	t.Helper()
-	b.BatchReplace(t, n, val)
-}
-
-// Update updates the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPath) Update(t testing.TB, val *oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf) *gpb.SetResponse {
-	t.Helper()
-	return genutil.Update(t, n, val)
-}
-
-// BatchUpdate buffers a config update operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf in the given batch object.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_SpfPath) BatchUpdate(t testing.TB, b *config.SetRequestBatch, val *oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf) {
-	t.Helper()
-	b.BatchUpdate(t, n, val)
-}
-
-// Lookup fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval with a ONCE subscription.
-// It returns nil if there is no value present at the path.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath) Lookup(t testing.TB) *oc.QualifiedUint64 {
-	t.Helper()
-	goStruct := &oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf{}
-	md, ok := oc.Lookup(t, n, "NetworkInstance_Protocol_Isis_Global_Timers_Spf", goStruct, true, true)
-	if ok {
-		return convertNetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath(t, md, goStruct)
-	}
-	return nil
-}
-
-// Get fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval with a ONCE subscription,
-// failing the test fatally is no value is present at the path.
-// To avoid a fatal test failure, use the Lookup method instead.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath) Get(t testing.TB) uint64 {
-	t.Helper()
-	return n.Lookup(t).Val(t)
-}
-
-// Lookup fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval with a ONCE subscription.
-// It returns an empty list if no values are present at the path.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPathAny) Lookup(t testing.TB) []*oc.QualifiedUint64 {
-	t.Helper()
-	datapoints, queryPath := genutil.MustGet(t, n)
-	datapointGroups, sortedPrefixes := genutil.BundleDatapoints(t, datapoints, uint(len(queryPath.Elem)))
-
-	var data []*oc.QualifiedUint64
-	for _, prefix := range sortedPrefixes {
-		goStruct := &oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf{}
-		md, ok := genutil.MustUnmarshal(t, datapointGroups[prefix], oc.GetSchema(), "NetworkInstance_Protocol_Isis_Global_Timers_Spf", goStruct, queryPath, true, true)
-		if !ok {
-			continue
-		}
-		qv := convertNetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath(t, md, goStruct)
-		data = append(data, qv)
-	}
-	return data
-}
-
-// Get fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval with a ONCE subscription.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPathAny) Get(t testing.TB) []uint64 {
-	t.Helper()
-	fulldata := n.Lookup(t)
-	var data []uint64
-	for _, full := range fulldata {
-		data = append(data, full.Val(t))
-	}
-	return data
-}
-
-// Delete deletes the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath) Delete(t testing.TB) *gpb.SetResponse {
-	t.Helper()
-	return genutil.Delete(t, n)
-}
-
-// BatchDelete buffers a config delete operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval in the given batch object.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath) BatchDelete(t testing.TB, b *config.SetRequestBatch) {
-	t.Helper()
-	b.BatchDelete(t, n)
-}
-
-// Replace replaces the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath) Replace(t testing.TB, val uint64) *gpb.SetResponse {
-	t.Helper()
-	return genutil.Replace(t, n, &val)
-}
-
-// BatchReplace buffers a config replace operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval in the given batch object.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath) BatchReplace(t testing.TB, b *config.SetRequestBatch, val uint64) {
-	t.Helper()
-	b.BatchReplace(t, n, &val)
-}
-
-// Update updates the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath) Update(t testing.TB, val uint64) *gpb.SetResponse {
-	t.Helper()
-	return genutil.Update(t, n, &val)
-}
-
-// BatchUpdate buffers a config update operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-first-interval in the given batch object.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath) BatchUpdate(t testing.TB, b *config.SetRequestBatch, val uint64) {
-	t.Helper()
-	b.BatchUpdate(t, n, &val)
-}
-
-// convertNetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath extracts the value of the leaf SpfFirstInterval from its parent oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf
-// and combines the update with an existing Metadata to return a *oc.QualifiedUint64.
-func convertNetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfFirstIntervalPath(t testing.TB, md *genutil.Metadata, parent *oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf) *oc.QualifiedUint64 {
-	t.Helper()
-	qv := &oc.QualifiedUint64{
-		Metadata: md,
-	}
-	val := parent.SpfFirstInterval
-	if !reflect.ValueOf(val).IsZero() {
-		qv.SetVal(*val)
-	}
-	return qv
-}
-
-// Lookup fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval with a ONCE subscription.
-// It returns nil if there is no value present at the path.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath) Lookup(t testing.TB) *oc.QualifiedUint64 {
-	t.Helper()
-	goStruct := &oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf{}
-	md, ok := oc.Lookup(t, n, "NetworkInstance_Protocol_Isis_Global_Timers_Spf", goStruct, true, true)
-	if ok {
-		return convertNetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath(t, md, goStruct)
-	}
-	return (&oc.QualifiedUint64{
-		Metadata: md,
-	}).SetVal(goStruct.GetSpfHoldInterval())
-}
-
-// Get fetches the value at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval with a ONCE subscription,
-// failing the test fatally is no value is present at the path.
-// To avoid a fatal test failure, use the Lookup method instead.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath) Get(t testing.TB) uint64 {
-	t.Helper()
-	return n.Lookup(t).Val(t)
-}
-
-// Lookup fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval with a ONCE subscription.
-// It returns an empty list if no values are present at the path.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPathAny) Lookup(t testing.TB) []*oc.QualifiedUint64 {
-	t.Helper()
-	datapoints, queryPath := genutil.MustGet(t, n)
-	datapointGroups, sortedPrefixes := genutil.BundleDatapoints(t, datapoints, uint(len(queryPath.Elem)))
-
-	var data []*oc.QualifiedUint64
-	for _, prefix := range sortedPrefixes {
-		goStruct := &oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf{}
-		md, ok := genutil.MustUnmarshal(t, datapointGroups[prefix], oc.GetSchema(), "NetworkInstance_Protocol_Isis_Global_Timers_Spf", goStruct, queryPath, true, true)
-		if !ok {
-			continue
-		}
-		qv := convertNetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath(t, md, goStruct)
-		data = append(data, qv)
-	}
-	return data
-}
-
-// Get fetches the values at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval with a ONCE subscription.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPathAny) Get(t testing.TB) []uint64 {
-	t.Helper()
-	fulldata := n.Lookup(t)
-	var data []uint64
-	for _, full := range fulldata {
-		data = append(data, full.Val(t))
-	}
-	return data
-}
-
-// Delete deletes the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath) Delete(t testing.TB) *gpb.SetResponse {
-	t.Helper()
-	return genutil.Delete(t, n)
-}
-
-// BatchDelete buffers a config delete operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval in the given batch object.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath) BatchDelete(t testing.TB, b *config.SetRequestBatch) {
-	t.Helper()
-	b.BatchDelete(t, n)
-}
-
-// Replace replaces the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath) Replace(t testing.TB, val uint64) *gpb.SetResponse {
-	t.Helper()
-	return genutil.Replace(t, n, &val)
-}
-
-// BatchReplace buffers a config replace operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval in the given batch object.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath) BatchReplace(t testing.TB, b *config.SetRequestBatch, val uint64) {
-	t.Helper()
-	b.BatchReplace(t, n, &val)
-}
-
-// Update updates the configuration at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath) Update(t testing.TB, val uint64) *gpb.SetResponse {
-	t.Helper()
-	return genutil.Update(t, n, &val)
-}
-
-// BatchUpdate buffers a config update operation at /openconfig-network-instance/network-instances/network-instance/protocols/protocol/isis/global/timers/spf/config/spf-hold-interval in the given batch object.
-func (n *NetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath) BatchUpdate(t testing.TB, b *config.SetRequestBatch, val uint64) {
-	t.Helper()
-	b.BatchUpdate(t, n, &val)
-}
-
-// convertNetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath extracts the value of the leaf SpfHoldInterval from its parent oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf
-// and combines the update with an existing Metadata to return a *oc.QualifiedUint64.
-func convertNetworkInstance_Protocol_Isis_Global_Timers_Spf_SpfHoldIntervalPath(t testing.TB, md *genutil.Metadata, parent *oc.NetworkInstance_Protocol_Isis_Global_Timers_Spf) *oc.QualifiedUint64 {
-	t.Helper()
-	qv := &oc.QualifiedUint64{
-		Metadata: md,
-	}
-	val := parent.SpfHoldInterval
 	if !reflect.ValueOf(val).IsZero() {
 		qv.SetVal(*val)
 	}

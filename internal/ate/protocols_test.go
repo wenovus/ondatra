@@ -25,7 +25,7 @@ import (
 	opb "github.com/openconfig/ondatra/proto"
 )
 
-func clientWithTopoCfg(ifName string) *IxiaCfgClient {
+func clientWithTopoCfg(ifName string) *ixATE {
 	cfg := &ixconfig.Ixnetwork{
 		Topology: []*ixconfig.Topology{{
 			DeviceGroup: []*ixconfig.TopologyDeviceGroup{{
@@ -33,7 +33,7 @@ func clientWithTopoCfg(ifName string) *IxiaCfgClient {
 			}},
 		}},
 	}
-	return &IxiaCfgClient{
+	return &ixATE{
 		cfg: cfg,
 		intfs: map[string]*intf{
 			ifName: &intf{deviceGroup: cfg.Topology[0].DeviceGroup[0]},
@@ -292,7 +292,7 @@ func TestAddMACsecProtocol(t *testing.T) {
 func TestAddIpProtocols(t *testing.T) {
 	const ifName = "someIntf"
 
-	clientWithTopo := func(ifName string, hasMacSec bool) *IxiaCfgClient {
+	clientWithTopo := func(ifName string, hasMacSec bool) *ixATE {
 		eth := &ixconfig.TopologyEthernet{}
 		if hasMacSec {
 			eth.Macsec = []*ixconfig.TopologyMacsec{{}}
@@ -302,7 +302,7 @@ func TestAddIpProtocols(t *testing.T) {
 				DeviceGroup: []*ixconfig.TopologyDeviceGroup{{Ethernet: []*ixconfig.TopologyEthernet{eth}}},
 			}},
 		}
-		return &IxiaCfgClient{
+		return &ixATE{
 			cfg: cfg,
 			intfs: map[string]*intf{
 				ifName: &intf{deviceGroup: cfg.Topology[0].DeviceGroup[0]},
@@ -445,13 +445,13 @@ func TestAddIpProtocols(t *testing.T) {
 func TestAddIPLoopbackProtocols(t *testing.T) {
 	const ifName = "someIntf"
 
-	clientWithTopo := func() *IxiaCfgClient {
+	clientWithTopo := func() *ixATE {
 		cfg := &ixconfig.Ixnetwork{
 			Topology: []*ixconfig.Topology{{
 				DeviceGroup: []*ixconfig.TopologyDeviceGroup{{}},
 			}},
 		}
-		return &IxiaCfgClient{
+		return &ixATE{
 			cfg: cfg,
 			intfs: map[string]*intf{
 				ifName: &intf{deviceGroup: cfg.Topology[0].DeviceGroup[0]},
@@ -470,7 +470,14 @@ func TestAddIPLoopbackProtocols(t *testing.T) {
 			Name:             ifName,
 			Ipv4LoopbackCidr: "aa:bb:cc::",
 		},
-		wantErr: "could not parse",
+		wantErr: "invalid IPv4 CIDR",
+	}, {
+		desc: "Invalid IPv6 address.",
+		ifcfg: &opb.InterfaceConfig{
+			Name:             ifName,
+			Ipv6LoopbackCidr: "1.2.3.4",
+		},
+		wantErr: "invalid IPv6 CIDR",
 	}, {
 		desc: "Valid IPv4 address.",
 		ifcfg: &opb.InterfaceConfig{
@@ -482,6 +489,19 @@ func TestAddIPLoopbackProtocols(t *testing.T) {
 				Name:    ixconfig.String(fmt.Sprintf("IPv4 loopback on %s", ifName)),
 				Address: ixconfig.MultivalueStr("1.2.3.4"),
 				Prefix:  ixconfig.MultivalueUint32(30),
+			}},
+		},
+	}, {
+		desc: "Valid IPv6 address.",
+		ifcfg: &opb.InterfaceConfig{
+			Name:             ifName,
+			Ipv6LoopbackCidr: "cafe:beef::1/128",
+		},
+		wantCfg: &ixconfig.TopologyDeviceGroup{
+			Ipv6Loopback: []*ixconfig.TopologyIpv6Loopback{{
+				Name:    ixconfig.String(fmt.Sprintf("IPv6 loopback on %s", ifName)),
+				Address: ixconfig.MultivalueStr("cafe:beef::1"),
+				Prefix:  ixconfig.MultivalueUint32(128),
 			}},
 		},
 	}}
@@ -667,7 +687,7 @@ func TestISISReachability(t *testing.T) {
 				SystemId: "xyz",
 			}},
 		},
-		wantErr: "could not decode system ID",
+		wantErr: "could not decode",
 	}, {
 		desc: "invalid TE Router ID",
 		isr: &opb.ISReachability{
@@ -676,6 +696,14 @@ func TestISISReachability(t *testing.T) {
 			}},
 		},
 		wantErr: "invalid TE router ID",
+	}, {
+		desc: "invalid capability Router ID",
+		isr: &opb.ISReachability{
+			Nodes: []*opb.ISReachability_Node{{
+				CapabilityRouterId: "invalid",
+			}},
+		},
+		wantErr: "invalid capability router ID",
 	}, {
 		desc: "missing IPv4 from address",
 		isr: &opb.ISReachability{
@@ -877,6 +905,7 @@ func TestISISReachability(t *testing.T) {
 				SystemId: ixconfig.MultivalueStrList("00 00 00 00 00 6b"),
 				IsisL3PseudoRouter: []*ixconfig.TopologyIsisL3PseudoRouter{{
 					TERouterId:                  ixconfig.MultivalueStrList("0.0.0.0"),
+					RtrcapId:                    ixconfig.MultivalueStrList("0.0.0.0"),
 					SRAlgorithmCount:            ixconfig.NumberUint32(1),
 					SRGBRangeCount:              ixconfig.NumberUint32(1),
 					SrlbDescriptorCount:         ixconfig.NumberUint32(1),
@@ -972,6 +1001,7 @@ func TestISISReachability(t *testing.T) {
 				SystemId: ixconfig.MultivalueStrList("00 00 00 00 00 6b"),
 				IsisL3PseudoRouter: []*ixconfig.TopologyIsisL3PseudoRouter{{
 					TERouterId:                  ixconfig.MultivalueStrList("0.0.0.0"),
+					RtrcapId:                    ixconfig.MultivalueStrList("0.0.0.0"),
 					SRAlgorithmCount:            ixconfig.NumberUint32(1),
 					SRGBRangeCount:              ixconfig.NumberUint32(1),
 					SrlbDescriptorCount:         ixconfig.NumberUint32(1),
@@ -1075,6 +1105,7 @@ func TestISISReachability(t *testing.T) {
 				SystemId: ixconfig.MultivalueStrList("00 00 00 00 00 6b", "00 00 00 00 00 6b"),
 				IsisL3PseudoRouter: []*ixconfig.TopologyIsisL3PseudoRouter{{
 					TERouterId:                  ixconfig.MultivalueStrList("0.0.0.0", "0.0.0.0"),
+					RtrcapId:                    ixconfig.MultivalueStrList("0.0.0.0", "0.0.0.0"),
 					SRAlgorithmCount:            ixconfig.NumberUint32(1),
 					SRGBRangeCount:              ixconfig.NumberUint32(1),
 					SrlbDescriptorCount:         ixconfig.NumberUint32(1),
@@ -1263,6 +1294,7 @@ func TestISISReachability(t *testing.T) {
 				SystemId: ixconfig.MultivalueStrList("00 00 00 00 00 6b"),
 				IsisL3PseudoRouter: []*ixconfig.TopologyIsisL3PseudoRouter{{
 					TERouterId:       ixconfig.MultivalueStrList("0.0.0.0"),
+					RtrcapId:         ixconfig.MultivalueStrList("0.0.0.0"),
 					SRAlgorithmCount: ixconfig.NumberUint32(2),
 					IsisSRAlgorithmList: []*ixconfig.TopologyIsisSrAlgorithmList{{
 						IsisSrAlgorithm: ixconfig.MultivalueUintList(1),
@@ -1345,7 +1377,7 @@ func TestISISReachability(t *testing.T) {
 
 func TestAddBGPProtocols(t *testing.T) {
 	const ifName = "someIntf"
-	baseClient := func(withIPv4, withIPv6 bool) *IxiaCfgClient {
+	baseClient := func(withIPv4, withIPv6, withIPv4Loopback, withIPv6Loopback bool) *ixATE {
 		cfg := &ixconfig.Ixnetwork{
 			Topology: []*ixconfig.Topology{{
 				DeviceGroup: []*ixconfig.TopologyDeviceGroup{{
@@ -1354,7 +1386,8 @@ func TestAddBGPProtocols(t *testing.T) {
 			}},
 		}
 		ifc := &intf{deviceGroup: cfg.Topology[0].DeviceGroup[0]}
-		eth := cfg.Topology[0].DeviceGroup[0].Ethernet[0]
+		dg := cfg.Topology[0].DeviceGroup[0]
+		eth := dg.Ethernet[0]
 		if withIPv4 {
 			eth.Ipv4 = []*ixconfig.TopologyIpv4{{}}
 			ifc.ipv4 = eth.Ipv4[0]
@@ -1363,18 +1396,26 @@ func TestAddBGPProtocols(t *testing.T) {
 			eth.Ipv6 = []*ixconfig.TopologyIpv6{{}}
 			ifc.ipv6 = eth.Ipv6[0]
 		}
-		return &IxiaCfgClient{
+		if withIPv4Loopback {
+			dg.Ipv4Loopback = []*ixconfig.TopologyIpv4Loopback{{}}
+			ifc.ipv4Loopback = dg.Ipv4Loopback[0]
+		}
+		if withIPv6Loopback {
+			dg.Ipv6Loopback = []*ixconfig.TopologyIpv6Loopback{{}}
+			ifc.ipv6Loopback = dg.Ipv6Loopback[0]
+		}
+		return &ixATE{
 			cfg:   cfg,
 			intfs: map[string]*intf{ifName: ifc},
 		}
 	}
 
 	tests := []struct {
-		desc                   string
-		hasV4Intf, hasV6Intf   bool
-		peers                  []*opb.BgpPeer
-		wantV4Peer, wantV6Peer bool
-		wantErr                string
+		desc                                                           string
+		hasV4Intf, hasV6Intf, hasV4Loopback, hasV6Loopback             bool
+		peers                                                          []*opb.BgpPeer
+		wantV4Peer, wantV6Peer, wantV4LoopbackPeer, wantV6LoopbackPeer bool
+		wantErr                                                        string
 	}{{
 		desc: "invalid peer address",
 		peers: []*opb.BgpPeer{{
@@ -1404,6 +1445,20 @@ func TestAddBGPProtocols(t *testing.T) {
 		}},
 		wantErr: "without IPv6 configured on interface",
 	}, {
+		desc: "v4 loopback peer without intf",
+		peers: []*opb.BgpPeer{{
+			PeerAddress: "1.1.1.1",
+			OnLoopback:  true,
+		}},
+		wantErr: "without IPv4 loopback configured on interface",
+	}, {
+		desc: "v6 loopback peer without intf",
+		peers: []*opb.BgpPeer{{
+			PeerAddress: "cafe::1",
+			OnLoopback:  true,
+		}},
+		wantErr: "without IPv6 loopback configured on interface",
+	}, {
 		desc:      "valid peers",
 		hasV4Intf: true,
 		hasV6Intf: true,
@@ -1414,6 +1469,19 @@ func TestAddBGPProtocols(t *testing.T) {
 		}},
 		wantV4Peer: true,
 		wantV6Peer: true,
+	}, {
+		desc:          "valid loopback peer",
+		hasV4Loopback: true,
+		hasV6Loopback: true,
+		peers: []*opb.BgpPeer{{
+			PeerAddress: "1.1.1.1",
+			OnLoopback:  true,
+		}, {
+			PeerAddress: "cafe::1",
+			OnLoopback:  true,
+		}},
+		wantV4LoopbackPeer: true,
+		wantV6LoopbackPeer: true,
 	}}
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
@@ -1423,7 +1491,7 @@ func TestAddBGPProtocols(t *testing.T) {
 					BgpPeers: test.peers,
 				},
 			}
-			c := baseClient(test.hasV4Intf, test.hasV6Intf)
+			c := baseClient(test.hasV4Intf, test.hasV6Intf, test.hasV4Loopback, test.hasV6Loopback)
 			gotErr := c.addBGPProtocols(ifc)
 			if ((gotErr == nil) != (test.wantErr == "")) || (gotErr != nil && !strings.Contains(gotErr.Error(), test.wantErr)) {
 				t.Errorf("addBGPProtocols: got err: %v, want err %q", gotErr, test.wantErr)
@@ -1431,14 +1499,23 @@ func TestAddBGPProtocols(t *testing.T) {
 			if gotErr != nil {
 				return
 			}
-			eth := c.cfg.Topology[0].DeviceGroup[0].Ethernet[0]
+			dg := c.cfg.Topology[0].DeviceGroup[0]
+			eth := dg.Ethernet[0]
 			hasV4Peer := len(eth.Ipv4) > 0 && len(eth.Ipv4[0].BgpIpv4Peer) > 0
 			if hasV4Peer != test.wantV4Peer {
 				t.Errorf("addBGPProtocols: has V4 peer? %t, wanted V4 peer? %t", hasV4Peer, test.wantV4Peer)
 			}
 			hasV6Peer := len(eth.Ipv6) > 0 && len(eth.Ipv6[0].BgpIpv6Peer) > 0
 			if hasV6Peer != test.wantV6Peer {
-				t.Errorf("addBGPProtocols: has V6 peer? %t, wanted V4 peer? %t", hasV6Peer, test.wantV6Peer)
+				t.Errorf("addBGPProtocols: has V6 peer? %t, wanted V6 peer? %t", hasV6Peer, test.wantV6Peer)
+			}
+			hasV4LoopbackPeer := len(dg.Ipv4Loopback) > 0 && len(dg.Ipv4Loopback[0].BgpIpv4Peer) > 0
+			if hasV4LoopbackPeer != test.wantV4LoopbackPeer {
+				t.Errorf("addBGPProtocols: has V4 loopback peer? %t, wanted V4 loopback peer? %t", hasV4LoopbackPeer, test.wantV4LoopbackPeer)
+			}
+			hasV6LoopbackPeer := len(dg.Ipv6Loopback) > 0 && len(dg.Ipv6Loopback[0].BgpIpv6Peer) > 0
+			if hasV6LoopbackPeer != test.wantV6LoopbackPeer {
+				t.Errorf("addBGPProtocols: has V6 loopback peer? %t, wanted V6 loopback peer? %t", hasV6LoopbackPeer, test.wantV6LoopbackPeer)
 			}
 		})
 	}
@@ -2024,7 +2101,7 @@ func TestAddRSVPProtocols(t *testing.T) {
 		isrName = "isr"
 	)
 
-	clientWithTopo := func(hasIPv4, hasISISNetwGrp bool, numISISNodes int) *IxiaCfgClient {
+	clientWithTopo := func(hasIPv4, hasISISNetwGrp bool, numISISNodes int) *ixATE {
 		var ipv4 *ixconfig.TopologyIpv4
 		if hasIPv4 {
 			ipv4 = &ixconfig.TopologyIpv4{}
@@ -2039,7 +2116,7 @@ func TestAddRSVPProtocols(t *testing.T) {
 				},
 			}
 		}
-		return &IxiaCfgClient{
+		return &ixATE{
 			intfs: map[string]*intf{
 				ifName: &intf{
 					ipv4: ipv4,
@@ -2119,13 +2196,13 @@ func TestAddRSVPProtocols(t *testing.T) {
 				Address: ixconfig.MultivalueStrList("1.1.1.1", "2.2.2.2"),
 				Prefix:  ixconfig.MultivalueUintList(32, 31),
 				RsvpteLsps: []*ixconfig.TopologyRsvpteLsps{{
-					Active:          ixconfig.MultivalueTrue(),
-					EnableP2PEgress: ixconfig.Bool(true),
-					IngressP2PLsps:  ixconfig.NumberUint32(0),
+					Name:              ixconfig.String("RSVP LSPs 0 for someIntf"),
+					Active:            ixconfig.MultivalueTrue(),
+					EnableP2PEgress:   ixconfig.Bool(true),
+					IngressP2PLsps:    ixconfig.NumberUint32(0),
+					RsvpP2PEgressLsps: &ixconfig.TopologyRsvpP2PEgressLsps{},
 					RsvpP2PIngressLsps: &ixconfig.TopologyRsvpP2PIngressLsps{
-						Active:                ixconfig.MultivalueFalse(),
-						NumberOfEroSubObjects: ixconfig.NumberUint32(0),
-						NumberOfRroSubObjects: ixconfig.NumberUint32(0),
+						Active: ixconfig.MultivalueFalse(),
 					},
 				}},
 			}},
@@ -2216,6 +2293,8 @@ func TestAddRSVPProtocols(t *testing.T) {
 					RemoteIpCidr:        "9.9.9.9/32",
 					LocalProtection:     true,
 					BandwidthProtection: true,
+					TunnelId:            1,
+					LspId:               2,
 				}},
 			}, {
 				LocalIpCidr: "2.2.2.2/31",
@@ -2223,6 +2302,8 @@ func TestAddRSVPProtocols(t *testing.T) {
 					RemoteIpCidr:       "4.4.4.4/32",
 					FastReroute:        true,
 					PathReoptimization: true,
+					TunnelId:           3,
+					LspId:              4,
 				}, {
 					RemoteIpCidr: "6.6.6.6/31",
 					Rros: []*opb.RsvpConfig_Loopback_IngressLSP_RRO{
@@ -2247,9 +2328,11 @@ func TestAddRSVPProtocols(t *testing.T) {
 				Address: ixconfig.MultivalueStrList("1.1.1.1", "2.2.2.2"),
 				Prefix:  ixconfig.MultivalueUintList(32, 31),
 				RsvpteLsps: []*ixconfig.TopologyRsvpteLsps{{
-					Active:          ixconfig.MultivalueTrue(),
-					EnableP2PEgress: ixconfig.Bool(true),
-					IngressP2PLsps:  ixconfig.NumberUint32(2),
+					Name:              ixconfig.String("RSVP LSPs 0 for someIntf"),
+					Active:            ixconfig.MultivalueTrue(),
+					EnableP2PEgress:   ixconfig.Bool(true),
+					IngressP2PLsps:    ixconfig.NumberUint32(2),
+					RsvpP2PEgressLsps: &ixconfig.TopologyRsvpP2PEgressLsps{},
 					RsvpP2PIngressLsps: &ixconfig.TopologyRsvpP2PIngressLsps{
 						Active:                ixconfig.MultivalueTrue(),
 						NumberOfEroSubObjects: ixconfig.NumberUint32(2),
@@ -2274,6 +2357,8 @@ func TestAddRSVPProtocols(t *testing.T) {
 						BandwidthProtectionDesired: ixconfig.MultivalueBoolList(false, true, false, false),
 						EnableFastReroute:          ixconfig.MultivalueBoolList(false, false, true, false),
 						EnablePathReOptimization:   ixconfig.MultivalueBoolList(false, false, true, false),
+						TunnelId:                   ixconfig.MultivalueUintList(0, 1, 3, 0),
+						LspId:                      ixconfig.MultivalueUintList(0, 2, 4, 0),
 					},
 				}},
 			}},

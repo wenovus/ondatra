@@ -16,48 +16,44 @@
 package knebind
 
 import (
+	"bytes"
+	"golang.org/x/net/context"
+	//"crypto/tls"
 	"fmt"
+	"io"
 	"os/exec"
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-
 	log "github.com/golang/glog"
-	"github.com/openconfig/ondatra/internal/binding"
-	"github.com/openconfig/ondatra/internal/reservation"
-	"github.com/pborman/uuid"
+	"github.com/openconfig/ondatra/internal/closer"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/ssh"
+	//"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/prototext"
+	grpb "github.com/openconfig/gribi/v1/proto/service"
+	"github.com/openconfig/ondatra/binding"
+	"github.com/openconfig/ondatra/knebind/solver"
 
-	kpb "github.com/google/kne/proto/topo"
+	tpb "github.com/google/kne/proto/topo"
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
 	opb "github.com/openconfig/ondatra/proto"
+	p4pb "github.com/p4lang/p4runtime/go/p4/v1"
 )
 
 var (
-	// TODO: when Ondatra supports the OS dimension, use it to
-	// distinguish CSR from CXR and CEVO from VMX.
-	type2VendorMap = map[kpb.Node_Type]opb.Device_Vendor{
-		kpb.Node_ARISTA_CEOS:  opb.Device_ARISTA,
-		kpb.Node_CISCO_CSR:    opb.Device_CISCO,
-		kpb.Node_CISCO_CXR:    opb.Device_CISCO,
-		kpb.Node_JUNIPER_CEVO: opb.Device_JUNIPER,
-		kpb.Node_JUNIPER_VMX:  opb.Device_JUNIPER,
-		kpb.Node_IXIA_TG:      opb.Device_IXIA,
-		kpb.Node_FAKE:         opb.Device_FAKE,
-	}
-
-	fetchTopo = fetchTopology // to be stubbed out by tests
+	// to be stubbed out by tests
+	kneCmdFn  = kneCmd
+	sshExecFn = sshExec
 )
 
 // Bind implements the ondatra Binding interface for KNE
 type Bind struct {
 	binding.Binding
-	dut2GNMIAddr map[*reservation.DUT]string
-	mu           sync.Mutex
-	cfg          *Config
+	services solver.ServiceMap
+	mu       sync.Mutex
+	cfg      *Config
 }
 
 // New returns a new KNE bind instance.
@@ -66,113 +62,30 @@ func New(cfg *Config) (*Bind, error) {
 		return nil, fmt.Errorf("config cannot be nil")
 	}
 	return &Bind{
-		cfg:          cfg,
-		dut2GNMIAddr: make(map[*reservation.DUT]string),
+		cfg: cfg,
 	}, nil
 }
 
 // Reserve implements the binding Reserve method by finding nodes and links in
 // the topology specified in the config file that match the requested testbed.
-func (b *Bind) Reserve(ctx context.Context, tb *opb.Testbed, runTime time.Duration, waitTime time.Duration) (*reservation.Reservation, error) {
-	topo, err := fetchTopo(b.cfg)
+func (b *Bind) Reserve(ctx context.Context, tb *opb.Testbed, runTime time.Duration, waitTime time.Duration, partial map[string]string) (*binding.Reservation, error) {
+	if len(partial) > 0 {
+		return nil, errors.New("KNEBind Reserve does not yet support partial mappings")
+	}
+	out, err := kneCmdFn(b.cfg, "topology", "service", b.cfg.TopoPath)
 	if err != nil {
 		return nil, err
 	}
-	a, err := solve(tb, topo)
-	if err != nil {
-		return nil, err
-	}
-	res := &reservation.Reservation{
-		ID:   uuid.New(),
-		DUTs: make(map[string]*reservation.DUT),
-		ATEs: make(map[string]*reservation.ATE),
-	}
-	for _, dut := range tb.GetDuts() {
-		resDUT, err := b.resolveDUT(dut, a)
-		if err != nil {
-			return nil, err
-		}
-		res.DUTs[dut.GetId()] = resDUT
-	}
-	for _, ate := range tb.GetAtes() {
-		resATE, err := b.resolveATE(ate, a)
-		if err != nil {
-			return nil, err
-		}
-		res.ATEs[ate.GetId()] = resATE
-	}
-	return res, nil
-}
-
-func fetchTopology(cfg *Config) (*kpb.Topology, error) {
-	args := []string{"topology", "service", cfg.TopoPath}
-	if cfg.KubecfgPath != "" {
-		args = append(args, fmt.Sprintf("--kubecfg=%s", cfg.KubecfgPath))
-	}
-	cmd := exec.Command(cfg.CLIPath, args...)
-	out, err := cmd.Output()
-	if err != nil {
-		if execErr, ok := err.(*exec.ExitError); ok {
-			return nil, errors.Wrapf(err, "error executing command %v: %s", cmd, execErr.Stderr)
-		}
-		return nil, errors.Wrapf(err, "error executing command %v", cmd)
-	}
-	topo := new(kpb.Topology)
+	topo := new(tpb.Topology)
 	if err := prototext.Unmarshal(out, topo); err != nil {
 		return nil, errors.Wrap(err, "error unmarshalling KNE topology proto")
 	}
-	return topo, nil
-}
-
-func (b *Bind) resolveDUT(dev *opb.Device, a *assign) (*reservation.DUT, error) {
-	dims, err := b.resolveDims(dev, a)
+	sol, err := solver.Solve(tb, topo)
 	if err != nil {
 		return nil, err
 	}
-	dut := &reservation.DUT{dims}
-	b.dut2GNMIAddr[dut], err = gnmiAddr(a.dev2Node[dev])
-	if err != nil {
-		return nil, err
-	}
-	return dut, nil
-}
-
-func (b *Bind) resolveATE(dev *opb.Device, a *assign) (*reservation.ATE, error) {
-	dims, err := b.resolveDims(dev, a)
-	if err != nil {
-		return nil, err
-	}
-	return &reservation.ATE{dims}, nil
-}
-
-func (b *Bind) resolveDims(dev *opb.Device, a *assign) (*reservation.Dims, error) {
-	node := a.dev2Node[dev]
-	vendor, ok := type2VendorMap[node.GetType()]
-	if !ok {
-		return nil, errors.Errorf("No known device vendor for node type: %v", node.GetType())
-	}
-	typeName := kpb.Node_Type_name[int32(node.GetType())]
-	dims := &reservation.Dims{
-		Name:   node.GetName(),
-		Vendor: vendor,
-		// TODO: Determine appropriate hardware model and software version
-		HardwareModel:   typeName,
-		SoftwareVersion: typeName,
-		Ports:           make(map[string]*reservation.Port),
-	}
-	for _, p := range dev.GetPorts() {
-		dims.Ports[p.GetId()] = &reservation.Port{Name: a.port2Intf[p].vendorName}
-	}
-	return dims, nil
-}
-
-func gnmiAddr(node *kpb.Node) (string, error) {
-	for _, s := range node.GetServices() {
-		if s.GetName() == "gnmi" {
-			return fmt.Sprintf("%s:%d", s.GetOutsideIp(), s.GetOutside()), nil
-		}
-	}
-	return "", errors.Errorf("No GNMI service found in node: %v", node)
+	b.services = sol.Services
+	return sol.Reservation, nil
 }
 
 // Release is a no-op because there's need to reserve local VMs.
@@ -185,9 +98,37 @@ func (b *Bind) SetTestMetadata(_ *binding.TestMetadata) error {
 	return nil
 }
 
-func (b *Bind) DialGNMI(ctx context.Context, dut *reservation.DUT, opts ...grpc.DialOption) (gpb.GNMIClient, error) {
-	addr := b.dut2GNMIAddr[dut]
-	log.Infof("Dialing GNMI dut %s@%s", dut.Name, addr)
+func (b *Bind) DialGNMI(ctx context.Context, dut *binding.DUT, opts ...grpc.DialOption) (gpb.GNMIClient, error) {
+	conn, err := b.dialGRPC(ctx, dut, "gnmi", opts...)
+	if err != nil {
+		return nil, err
+	}
+	return gpb.NewGNMIClient(conn), nil
+}
+
+func (b *Bind) DialGRIBI(ctx context.Context, dut *binding.DUT, opts ...grpc.DialOption) (grpb.GRIBIClient, error) {
+	conn, err := b.dialGRPC(ctx, dut, "gribi", opts...)
+	if err != nil {
+		return nil, err
+	}
+	return grpb.NewGRIBIClient(conn), nil
+}
+
+func (b *Bind) DialP4RT(ctx context.Context, dut *binding.DUT, opts ...grpc.DialOption) (p4pb.P4RuntimeClient, error) {
+	conn, err := b.dialGRPC(ctx, dut, "p4rt", opts...)
+	if err != nil {
+		return nil, err
+	}
+	return p4pb.NewP4RuntimeClient(conn), nil
+}
+
+func (b *Bind) dialGRPC(ctx context.Context, dut *binding.DUT, serviceName string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	s, err := b.services.Lookup(dut.Name, serviceName)
+	if err != nil {
+		return nil, err
+	}
+	addr := serviceAddr(s)
+	log.Infof("Dialing service %q on dut %s@%s", serviceName, dut.Name, addr)
 	opts = append(opts,
 		grpc.WithInsecure(),
 		//grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})),
@@ -200,7 +141,12 @@ func (b *Bind) DialGNMI(ctx context.Context, dut *reservation.DUT, opts ...grpc.
 	if err != nil {
 		return nil, errors.Wrapf(err, "DialContext(ctx, %s, %v)", addr, opts)
 	}
-	return gpb.NewGNMIClient(conn), nil
+	return conn, nil
+}
+
+// serviceAddr returns the external IP address of a KNE service.
+func serviceAddr(s *tpb.Service) string {
+	return fmt.Sprintf("%s:%d", s.GetOutsideIp(), s.GetOutside())
 }
 
 type passCred struct {
@@ -217,4 +163,75 @@ func (c *passCred) GetRequestMetadata(ctx context.Context, uri ...string) (map[s
 
 func (c *passCred) RequireTransportSecurity() bool {
 	return true
+}
+
+func (b *Bind) PushConfig(ctx context.Context, dut *binding.DUT, config string, reset bool) error {
+	if dut.Vendor != opb.Device_ARISTA {
+		return errors.New("KNEBind PushConfig only supports Arista devices")
+	}
+	if reset {
+		if _, err := kneCmdFn(b.cfg, "topology", "reset", b.cfg.TopoPath, dut.Name, "--push"); err != nil {
+			return err
+		}
+	}
+	_, err := b.dutExec(dut, "enable\nconfig terminal\n"+config)
+	return err
+}
+
+func (b *Bind) dutExec(dut *binding.DUT, cmd string) (_ string, rerr error) {
+	s, err := b.services.Lookup(dut.Name, "ssh")
+	if err != nil {
+		return "", err
+	}
+	addr := serviceAddr(s)
+	config := &ssh.ClientConfig{
+		User: b.cfg.Username,
+		Auth: []ssh.AuthMethod{ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) ([]string, error) {
+			if len(questions) > 0 {
+				return []string{b.cfg.Password}, nil
+			}
+			return nil, nil
+		})},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+	return sshExecFn(addr, config, cmd)
+}
+
+func sshExec(addr string, cfg *ssh.ClientConfig, cmd string) (_ string, rerr error) {
+	client, err := ssh.Dial("tcp", addr, cfg)
+	if err != nil {
+		return "", errors.Wrapf(err, "could not dial SSH server %s", addr)
+	}
+	defer closer.Close(&rerr, client.Close, "error closing SSH client")
+	session, err := client.NewSession()
+	if err != nil {
+		return "", errors.Wrap(err, "could not create ssh session")
+	}
+	defer closer.Close(&rerr, func() error {
+		if err := session.Close(); err != io.EOF {
+			return err
+		}
+		return nil
+	}, "error closing SSH session")
+	var buf bytes.Buffer
+	session.Stdout = &buf
+	if err := session.Run(cmd); err != nil {
+		return "", errors.Wrapf(err, "could not execute %q\noutput: %q", cmd, buf.String())
+	}
+	return buf.String(), nil
+}
+
+func kneCmd(cfg *Config, args ...string) ([]byte, error) {
+	if cfg.KubecfgPath != "" {
+		args = append(append([]string{}, args...), fmt.Sprintf("--kubecfg=%s", cfg.KubecfgPath))
+	}
+	cmd := exec.Command(cfg.CLIPath, args...)
+	out, err := cmd.Output()
+	if err != nil {
+		if execErr, ok := err.(*exec.ExitError); ok {
+			return nil, errors.Wrapf(err, "error executing command %v: %s", cmd, execErr.Stderr)
+		}
+		return nil, errors.Wrapf(err, "error executing command %v", cmd)
+	}
+	return out, nil
 }

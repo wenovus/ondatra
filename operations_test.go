@@ -17,9 +17,9 @@ package ondatra
 import (
 	"bytes"
 	"golang.org/x/net/context"
+	"io"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -28,8 +28,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/testing/protocmp"
-	"github.com/openconfig/ondatra/internal/binding"
-	"github.com/openconfig/ondatra/internal/reservation"
+	"github.com/openconfig/ondatra/binding"
 	"github.com/openconfig/ondatra/negtest"
 
 	ospb "github.com/openconfig/gnoi/os"
@@ -48,7 +47,7 @@ func initOperationFakes(t *testing.T) {
 	t.Helper()
 	initFakeBinding(t)
 	reserveFakeTestbed(t)
-	fakeBind.GNOIDialer = func(context.Context, *reservation.DUT, ...grpc.DialOption) (binding.GNOIClients, error) {
+	fakeBind.GNOIDialer = func(context.Context, *binding.DUT, ...grpc.DialOption) (binding.GNOIClients, error) {
 		return fakeGNOI, nil
 	}
 }
@@ -279,7 +278,12 @@ type fakePingClient struct {
 }
 
 func (pc *fakePingClient) Recv() (*spb.PingResponse, error) {
-	return pc.resp, pc.err
+	if pc.resp == nil && pc.err == nil {
+		return nil, io.EOF
+	}
+	resp := pc.resp
+	pc.resp = nil
+	return resp, pc.err
 }
 
 func (*fakePingClient) CloseSend() error {
@@ -288,16 +292,29 @@ func (*fakePingClient) CloseSend() error {
 
 func TestPing(t *testing.T) {
 	initOperationFakes(t)
-	var got string
-	fakeGNOI.Pinger = func(_ context.Context, req *spb.PingRequest, _ ...grpc.CallOption) (spb.System_PingClient, error) {
-		got = req.GetDestination()
-		return &fakePingClient{resp: &spb.PingResponse{}}, nil
+	tests := []struct {
+		desc, dest string
+		count      int32
+	}{
+		{desc: "zero count", dest: "1.2.3.4"},
+		{desc: "non-zero count", dest: "1.2.3.4", count: 7},
 	}
-	want := "1.2.3.4"
-	DUT(t, "dut").Operations().NewPing().WithDestination(want).Operate(t)
-	if got != want {
-		t.Errorf("Operate(t) got %s, want %s", got, want)
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			var got string
+			fakeGNOI.Pinger = func(_ context.Context, req *spb.PingRequest, _ ...grpc.CallOption) (spb.System_PingClient, error) {
+				got = req.GetDestination()
+				return &fakePingClient{resp: &spb.PingResponse{Sent: tt.count, Received: tt.count}}, nil
+			}
+			want := tt.dest
+			DUT(t, "dut").Operations().NewPing().WithDestination(tt.dest).WithCount(tt.count).Operate(t)
+			if got != want {
+				t.Errorf("Operate(t) got %s, want %s", got, want)
+			}
+
+		})
 	}
+
 }
 
 func TestPingErrors(t *testing.T) {
@@ -321,7 +338,16 @@ func TestPingErrors(t *testing.T) {
 				err: errors.New("recv error"),
 			}, nil
 		},
-	}}
+	}, {
+		wantErr: "ping sent 5 packets, received 3",
+		dest:    "1.2.3.4",
+		pinger: func(_ context.Context, req *spb.PingRequest, _ ...grpc.CallOption) (spb.System_PingClient, error) {
+			return &fakePingClient{
+				resp: &spb.PingResponse{Sent: 5, Received: 3},
+			}, nil
+		},
+	},
+	}
 
 	for _, tt := range tests {
 		t.Run(tt.wantErr, func(t *testing.T) {
@@ -340,60 +366,96 @@ func TestPingErrors(t *testing.T) {
 func TestSetInterfaceState(t *testing.T) {
 	initOperationFakes(t)
 	var gotConfig string
-	fakeBind.ConfigPusher = func(_ context.Context, _ *reservation.DUT, config string, _ *binding.ConfigOptions) error {
+	fakeBind.ConfigPusher = func(_ context.Context, _ *binding.DUT, config string, _ bool) error {
 		gotConfig = config
 		return nil
 	}
-	dut := DUT(t, "dut")
-	port := dut.Port(t, "port1")
+	dutArista := DUT(t, "dut")
+	dutCisco := DUT(t, "dut_cisco")
+	dutJuniper := DUT(t, "dut_juniper")
+	portArista := dutArista.Port(t, "port1")
+	portCisco := dutCisco.Port(t, "port1")
+	portJuniper := dutJuniper.Port(t, "port1")
 
 	tests := []struct {
-		desc        string
-		op          *SetInterfaceStateOp
-		wantIntf    string
-		wantEnabled bool
+		desc       string
+		op         *SetInterfaceStateOp
+		wantIntf   string
+		wantConfig string
 	}{{
-		desc: "physical intf enable",
-		op: dut.Operations().
+		desc: "Arista physical intf enable",
+		op: dutArista.Operations().
 			NewSetInterfaceState().
-			WithPhysicalInterface(port).
+			WithPhysicalInterface(portArista).
 			WithStateEnabled(true),
-		wantIntf:    "Et1/2/3",
-		wantEnabled: true,
+		wantIntf:   "Et1/2/3",
+		wantConfig: "no shutdown",
 	}, {
-		desc: "physical intf disable",
-		op: dut.Operations().
+		desc: "Cisco physical intf enable",
+		op: dutCisco.Operations().
 			NewSetInterfaceState().
-			WithPhysicalInterface(port).
-			WithStateEnabled(false),
-		wantIntf:    "Et1/2/3",
-		wantEnabled: false,
+			WithPhysicalInterface(portCisco).
+			WithStateEnabled(true),
+		wantIntf:   "Et1/2/3",
+		wantConfig: "no shutdown",
 	}, {
-		desc: "logical intf",
-		op: dut.Operations().
+		desc: "Juniper physical intf enable",
+		op: dutJuniper.Operations().
+			NewSetInterfaceState().
+			WithPhysicalInterface(portJuniper).
+			WithStateEnabled(true),
+		wantIntf:   "Et1/2/3",
+		wantConfig: "delete: disable",
+	}, {
+		desc: "Arista physical intf disable",
+		op: dutArista.Operations().
+			NewSetInterfaceState().
+			WithPhysicalInterface(portArista).
+			WithStateEnabled(false),
+		wantIntf:   "Et1/2/3",
+		wantConfig: "  shutdown",
+	}, {
+		desc: "Cisco physical intf disable",
+		op: dutCisco.Operations().
+			NewSetInterfaceState().
+			WithPhysicalInterface(portCisco).
+			WithStateEnabled(false),
+		wantIntf:   "Et1/2/3",
+		wantConfig: "  shutdown",
+	}, {
+		desc: "Juniper physical intf disable",
+		op: dutJuniper.Operations().
+			NewSetInterfaceState().
+			WithPhysicalInterface(portJuniper).
+			WithStateEnabled(false),
+		wantIntf:   "Et1/2/3",
+		wantConfig: "  disable",
+	}, {
+		desc: "logical intf enable",
+		op: dutArista.Operations().
 			NewSetInterfaceState().
 			WithLogicalInterface("lintf").
 			WithStateEnabled(true),
-		wantIntf:    "lintf",
-		wantEnabled: true,
+		wantIntf:   "lintf",
+		wantConfig: "no shutdown",
 	}, {
 		desc: "logical intf overwrite",
-		op: dut.Operations().
+		op: dutArista.Operations().
 			NewSetInterfaceState().
-			WithPhysicalInterface(port).
+			WithPhysicalInterface(portArista).
 			WithLogicalInterface("lintf").
 			WithStateEnabled(true),
-		wantIntf:    "lintf",
-		wantEnabled: true,
+		wantIntf:   "lintf",
+		wantConfig: "no shutdown",
 	}, {
 		desc: "state overwrite",
-		op: dut.Operations().
+		op: dutArista.Operations().
 			NewSetInterfaceState().
 			WithLogicalInterface("lintf").
 			WithStateEnabled(false).
 			WithStateEnabled(true),
-		wantIntf:    "lintf",
-		wantEnabled: true,
+		wantIntf:   "lintf",
+		wantConfig: "no shutdown",
 	}}
 
 	for _, tt := range tests {
@@ -403,8 +465,8 @@ func TestSetInterfaceState(t *testing.T) {
 			if !strings.Contains(gotConfig, tt.wantIntf) {
 				t.Errorf("Operate() got config %q, want interface %q", gotConfig, tt.wantIntf)
 			}
-			if wantEnabled := strconv.FormatBool(tt.wantEnabled); !strings.Contains(gotConfig, wantEnabled) {
-				t.Errorf("Operate() got config %q, want enabled %q", gotConfig, wantEnabled)
+			if !strings.Contains(gotConfig, tt.wantConfig) {
+				t.Errorf("Operate() got config %q, want %q", gotConfig, tt.wantConfig)
 			}
 		})
 	}
@@ -555,7 +617,7 @@ func TestKillProcessErrors(t *testing.T) {
 		desc: "bad DUT",
 		dut: &DUTDevice{&Device{
 			id:  "not in the tb",
-			res: &reservation.DUT{&reservation.Dims{Vendor: opb.Device_JUNIPER}},
+			res: &binding.DUT{&binding.Dims{Vendor: opb.Device_JUNIPER}},
 		}},
 	}, {
 		desc: "kill fails on good dut",

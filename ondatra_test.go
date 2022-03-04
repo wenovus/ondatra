@@ -21,9 +21,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/openconfig/ondatra/binding"
+	"github.com/openconfig/ondatra/internal/flags"
 )
 
 func TestReserveOnRun(t *testing.T) {
+	flagParseFn = func() (*flags.Values, error) {
+		return &flags.Values{}, nil
+	}
 	origRunTests := runTestsFn
 	defer func() {
 		reserveFn = reserve
@@ -51,7 +56,7 @@ func TestReserveOnRun(t *testing.T) {
 	}}
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			reserveFn = func(_ string, _, _ time.Duration) error {
+			reserveFn = func(*flags.Values) error {
 				return test.reservErr
 			}
 			var releaseMu sync.Mutex
@@ -73,9 +78,16 @@ func TestReserveOnRun(t *testing.T) {
 					sigc <- test.sig
 				}
 			}
-
-			if gotErr := doRun(nil); (gotErr != nil) != (test.wantErr != "") {
+			var initBindCalled bool
+			initBindFn = func(b binding.Binding) {
+				initBindCalled = true
+			}
+			fakeBinder := func() (binding.Binding, error) { return nil, nil }
+			if gotErr := doRun(nil, fakeBinder); (gotErr != nil) != (test.wantErr != "") {
 				t.Fatalf("doRun: got err %v, wanted err? %t", gotErr, test.wantErr != "")
+			}
+			if !initBindCalled {
+				t.Errorf("doRun did not initialize the binding")
 			}
 			wantReleased := test.reservErr == nil
 			if wantReleased {

@@ -19,13 +19,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/openconfig/ondatra/binding/usererr"
 	"github.com/openconfig/ondatra/internal/ixconfig"
-	"github.com/openconfig/ondatra/internal/usererr"
 
 	opb "github.com/openconfig/ondatra/proto"
 )
 
-func (ix *IxiaCfgClient) addPorts(top *opb.Topology) error {
+func (ix *ixATE) addPorts(top *opb.Topology) error {
 	ports := make(map[string]bool)
 	portToLag := make(map[string]*opb.Lag)
 	for _, ol := range top.GetLags() {
@@ -54,9 +54,10 @@ func (ix *IxiaCfgClient) addPorts(top *opb.Topology) error {
 	sort.Strings(portList)
 	for _, port := range portList {
 		vport := &ixconfig.Vport{
-			Name:     ixconfig.String(fmt.Sprintf("%s/%s", ix.name, port)),
-			Location: ixconfig.String(fmt.Sprintf("%s;%s", ix.chassisHost, strings.ReplaceAll(port, "/", ";"))),
-			L1Config: &ixconfig.VportL1Config{},
+			Name:      ixconfig.String(fmt.Sprintf("%s/%s", ix.name, port)),
+			Location:  ixconfig.String(fmt.Sprintf("%s;%s", ix.chassisHost, strings.ReplaceAll(port, "/", ";"))),
+			L1Config:  &ixconfig.VportL1Config{},
+			Protocols: &ixconfig.VportProtocols{}, // Used as the target for traffic endpoints
 			ProtocolStack: &ixconfig.VportProtocolStack{
 				Options: &ixconfig.VportProtocolStackOptions{
 					// (b/192980845) Configure more neighbor solicitations spaced further apart to workaround IPv6 failures behind LACP.
@@ -76,26 +77,39 @@ func (ix *IxiaCfgClient) addPorts(top *opb.Topology) error {
 	return nil
 }
 
-func (ix *IxiaCfgClient) addLAGs(lags []*opb.Lag) {
+func (ix *ixATE) addLAGs(lags []*opb.Lag) error {
+	portToLag := make(map[string]*opb.Lag)
 	for _, ol := range lags {
 		lag := &ixconfig.Lag{
-			Name: ixconfig.String(fmt.Sprintf("%s/%s", ix.name, ol.GetName())),
+			Name:    ixconfig.String(fmt.Sprintf("%s/%s", ix.name, ol.GetName())),
+			LagMode: &ixconfig.LagLagMode{},
 			ProtocolStack: &ixconfig.LagProtocolStack{
 				Multiplier: ixconfig.NumberFloat64(1),
 				Enabled:    ixconfig.MultivalueBool(true),
-				Ethernet: []*ixconfig.LagEthernet{{
-					Multiplier: ixconfig.NumberFloat64(1),
-					Lagportlacp: []*ixconfig.LagLagportlacp{{
-						Multiplier: ixconfig.NumberFloat64(1),
-					}},
-				}},
+				Ethernet:   []*ixconfig.LagEthernet{{Multiplier: ixconfig.NumberFloat64(1)}},
 			},
 		}
+		if ol.GetLacp().GetEnabled() {
+			lag.LagMode.LagProtocol = ixconfig.MultivalueStr("lacp")
+			lag.ProtocolStack.Ethernet[0].Lagportlacp = []*ixconfig.LagLagportlacp{{
+				Multiplier: ixconfig.NumberFloat64(1),
+			}}
+		} else {
+			lag.LagMode.LagProtocol = ixconfig.MultivalueStr("staticlag")
+			lag.ProtocolStack.Ethernet[0].Lagportstaticlag = []*ixconfig.LagLagportstaticlag{{
+				Multiplier: ixconfig.NumberFloat64(1),
+			}}
+		}
+
 		var vports []*ixconfig.Vport
 		for _, p := range ol.GetPorts() {
+			if prevLag, ok := portToLag[p]; ok {
+				return fmt.Errorf("port %s belongs to multiple LAGs: %s and %s", p, prevLag.GetName(), ol.GetName())
+			}
+			portToLag[p] = ol
 			vport := ix.ports[p]
 			vports = append(vports, vport)
-			lag.Vports = append(lag.Vports, vport.XPath().String())
+			lag.AppendVportsRef(vport)
 		}
 		// Alphabetize ports so that a particular reservation produces the same config.
 		sort.Strings(lag.Vports)
@@ -107,11 +121,12 @@ func (ix *IxiaCfgClient) addLAGs(lags []*opb.Lag) {
 	sort.Slice(ix.cfg.Lag, func(i int, j int) bool {
 		return lags[i].GetName() <= lags[j].GetName()
 	})
+	return nil
 }
 
 // addTopology adds an IxNetwork topology with ports assigned and device groups created with ethernet configuration.
 // Each interface config must apply to the same set of ports.
-func (ix *IxiaCfgClient) addTopology(ifs []*opb.InterfaceConfig) {
+func (ix *ixATE) addTopology(ifs []*opb.InterfaceConfig) {
 	// Add an empty topology to the config.
 	var name string
 	var link ixconfig.IxiaCfgNode
@@ -122,12 +137,12 @@ func (ix *IxiaCfgClient) addTopology(ifs []*opb.InterfaceConfig) {
 		name = v.Port
 		link = ix.ports[name]
 		linkPorts = []*ixconfig.Vport{link.(*ixconfig.Vport)}
-		topo.Vports = []string{link.XPath().String()}
+		topo.SetVportsRefs([]ixconfig.IxiaCfgNode{link})
 	case *opb.InterfaceConfig_Lag:
 		name = v.Lag
 		link = ix.lags[name]
 		linkPorts = ix.lagPorts[link.(*ixconfig.Lag)]
-		topo.Ports = []string{link.XPath().String()}
+		topo.SetPortsRefs([]ixconfig.IxiaCfgNode{link})
 	}
 	topo.Name = ixconfig.String(fmt.Sprintf("Topology on %s", name))
 
@@ -188,56 +203,56 @@ func (ix *IxiaCfgClient) addTopology(ifs []*opb.InterfaceConfig) {
 				atlasFourHundredGigLan(p.L1Config).EnableRsFecStats = ixconfig.Bool(false)
 				krakenFourHundredGigLan(p.L1Config).EnableRsFecStats = ixconfig.Bool(false)
 				novusHundredGigLan(p.L1Config).EnableRsFecStats = ixconfig.Bool(false)
-				uhdOneHundredGigLan(p.L1Config).EnableRsFecStats = ixconfig.Bool(false)
 			}
 		}
 		dg.Ethernet = append(dg.Ethernet, topoEth)
 		ix.intfs[ifc.GetName()] = &intf{
 			deviceGroup: dg,
 			link:        link,
+			hasVLAN:     enableVlan,
 		}
 	}
 	ix.cfg.Topology = append(ix.cfg.Topology, topo)
 }
 
-func aresOneFourHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportAresOneFourHundredGigLan {
+func aresOneFourHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportL1ConfigAresOneFourHundredGigLan {
 	if l1.AresOneFourHundredGigLan == nil {
-		l1.AresOneFourHundredGigLan = &ixconfig.VportAresOneFourHundredGigLan{}
+		l1.AresOneFourHundredGigLan = &ixconfig.VportL1ConfigAresOneFourHundredGigLan{}
 	}
 	return l1.AresOneFourHundredGigLan
 }
 
-func atlasFourHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportAtlasFourHundredGigLan {
+func atlasFourHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportL1ConfigAtlasFourHundredGigLan {
 	if l1.AtlasFourHundredGigLan == nil {
-		l1.AtlasFourHundredGigLan = &ixconfig.VportAtlasFourHundredGigLan{}
+		l1.AtlasFourHundredGigLan = &ixconfig.VportL1ConfigAtlasFourHundredGigLan{}
 	}
 	return l1.AtlasFourHundredGigLan
 }
 
-func krakenFourHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportKrakenFourHundredGigLan {
+func krakenFourHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportL1ConfigKrakenFourHundredGigLan {
 	if l1.KrakenFourHundredGigLan == nil {
-		l1.KrakenFourHundredGigLan = &ixconfig.VportKrakenFourHundredGigLan{}
+		l1.KrakenFourHundredGigLan = &ixconfig.VportL1ConfigKrakenFourHundredGigLan{}
 	}
 	return l1.KrakenFourHundredGigLan
 }
 
-func novusHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportNovusHundredGigLan {
+func novusHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportL1ConfigNovusHundredGigLan {
 	if l1.NovusHundredGigLan == nil {
-		l1.NovusHundredGigLan = &ixconfig.VportNovusHundredGigLan{}
+		l1.NovusHundredGigLan = &ixconfig.VportL1ConfigNovusHundredGigLan{}
 	}
 	return l1.NovusHundredGigLan
 }
 
-func novusTenGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportNovusTenGigLan {
+func novusTenGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportL1ConfigNovusTenGigLan {
 	if l1.NovusTenGigLan == nil {
-		l1.NovusTenGigLan = &ixconfig.VportNovusTenGigLan{}
+		l1.NovusTenGigLan = &ixconfig.VportL1ConfigNovusTenGigLan{}
 	}
 	return l1.NovusTenGigLan
 }
 
-func uhdOneHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportUhdOneHundredGigLan {
+func uhdOneHundredGigLan(l1 *ixconfig.VportL1Config) *ixconfig.VportL1ConfigUhdOneHundredGigLan {
 	if l1.UhdOneHundredGigLan == nil {
-		l1.UhdOneHundredGigLan = &ixconfig.VportUhdOneHundredGigLan{}
+		l1.UhdOneHundredGigLan = &ixconfig.VportL1ConfigUhdOneHundredGigLan{}
 	}
 	return l1.UhdOneHundredGigLan
 }

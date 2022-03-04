@@ -37,6 +37,7 @@ message Device {
     JUNIPER = 4;
     CIENA = 5;
     PALOALTO = 6;
+    NOKIA = 7;
     FAKE = 99;
   }
   Vendor vendor = 2;

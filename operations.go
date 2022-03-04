@@ -23,15 +23,15 @@ import (
 	"time"
 
 	"github.com/openconfig/ondatra/internal/closer"
+	"github.com/openconfig/ondatra/binding"
 	"github.com/openconfig/ondatra/internal/operations"
-	"github.com/openconfig/ondatra/internal/reservation"
 
 	spb "github.com/openconfig/gnoi/system"
 )
 
 // Operations is the device operations API.
 type Operations struct {
-	dev reservation.Device
+	dev binding.Device
 }
 
 // NewInstall creates a new install operation.
@@ -41,7 +41,7 @@ func (o *Operations) NewInstall() *InstallOp {
 
 // InstallOp is an OS install operation.
 type InstallOp struct {
-	dev     reservation.Device
+	dev     binding.Device
 	version string
 	standby bool
 	reader  io.Reader
@@ -116,8 +116,9 @@ func (o *Operations) NewPing() *PingOp {
 
 // PingOp is a ping operation.
 type PingOp struct {
-	dev  reservation.Device
-	dest string
+	dev   binding.Device
+	dest  string
+	count int32
 }
 
 func (p *PingOp) String() string {
@@ -130,11 +131,17 @@ func (p *PingOp) WithDestination(dest string) *PingOp {
 	return p
 }
 
+// WithCount specifies the number of packets used by a Ping operation.
+func (p *PingOp) WithCount(count int32) *PingOp {
+	p.count = count
+	return p
+}
+
 // Operate performs the Ping operation.
 func (p *PingOp) Operate(t testing.TB) {
 	t.Helper()
 	logAction(t, "Pinging from %s", p.dev)
-	if err := operations.Ping(context.Background(), p.dev, p.dest); err != nil {
+	if err := operations.Ping(context.Background(), p.dev, p.dest, p.count); err != nil {
 		t.Fatalf("Operate(t) on %s: %v", p, err)
 	}
 }
@@ -146,7 +153,7 @@ func (o *Operations) NewSetInterfaceState() *SetInterfaceStateOp {
 
 // SetInterfaceStateOp is a set interface state operation that sets the state of an interface on a DUT.
 type SetInterfaceStateOp struct {
-	dev     reservation.Device
+	dev     binding.Device
 	intf    string
 	enabled *bool
 }
@@ -191,7 +198,7 @@ func (o *Operations) NewReboot() *RebootOp {
 
 // RebootOp is a reboot operation.
 type RebootOp struct {
-	dev     reservation.Device
+	dev     binding.Device
 	timeout time.Duration
 }
 
@@ -225,7 +232,7 @@ func (o *Operations) NewKillProcess() *KillProcessOp {
 
 // KillProcessOp is an operation that kills a process on a device.
 type KillProcessOp struct {
-	dev reservation.Device
+	dev binding.Device
 	req *spb.KillProcessRequest
 }
 

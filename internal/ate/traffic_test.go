@@ -124,16 +124,26 @@ func TestAddTraffic(t *testing.T) {
 		ifName     = "someIntf"
 		lagIfName  = "lagIntf"
 		netGrpName = "someNetGrp"
+		rsvpName   = "someRSVPCfg"
 		flowName   = "someFlow"
 	)
 	intfEPs := []*opb.Flow_Endpoint{{InterfaceName: ifName}}
 	lagIntfEPs := []*opb.Flow_Endpoint{{InterfaceName: lagIfName}}
-	netwEPs := []*opb.Flow_Endpoint{{InterfaceName: ifName, NetworkName: netGrpName}}
+	netwEPs := []*opb.Flow_Endpoint{{
+		InterfaceName: ifName,
+		Generated:     &opb.Flow_Endpoint_NetworkName{NetworkName: netGrpName},
+	}}
+	lspEPs := []*opb.Flow_Endpoint{{
+		InterfaceName: ifName,
+		Generated:     &opb.Flow_Endpoint_RsvpName{RsvpName: rsvpName},
+	}}
 	vportEPs := []string{"/vport[1]/protocols"}
 	lagEPs := []string{"/lag[1]"}
 	devGrpEPs := []string{"/topology[1]/deviceGroup[1]"}
 	netGrpEPs := []string{"/topology[1]/deviceGroup[1]/networkGroup[1]"}
-	baseClient := func(hasNetGrp bool) *IxiaCfgClient {
+	egressLSPEPs := []string{"/topology[1]/deviceGroup[1]/networkGroup[2]/deviceGroup[1]/ipv4Loopback[1]/rsvpteLsps[1]/rsvpP2PEgressLsps"}
+	ingressLSPEPs := []string{"/topology[1]/deviceGroup[1]/networkGroup[2]/deviceGroup[1]/ipv4Loopback[1]/rsvpteLsps[1]/rsvpP2PIngressLsps"}
+	baseClient := func() *ixATE {
 		cfg := &ixconfig.Ixnetwork{
 			Topology: []*ixconfig.Topology{{
 				DeviceGroup: []*ixconfig.TopologyDeviceGroup{{
@@ -144,22 +154,39 @@ func TestAddTraffic(t *testing.T) {
 					Ethernet: []*ixconfig.TopologyEthernet{{}},
 				}},
 			}},
-			Vport: []*ixconfig.Vport{{Name: ixconfig.String("vport")}},
-			Lag:   []*ixconfig.Lag{{Name: ixconfig.String("lag")}},
+			Vport: []*ixconfig.Vport{{
+				Name:      ixconfig.String("vport"),
+				Protocols: &ixconfig.VportProtocols{},
+			}},
+			Lag: []*ixconfig.Lag{{Name: ixconfig.String("lag")}},
 		}
-		var ng *ixconfig.TopologyNetworkGroup
-		if hasNetGrp {
-			ng = &ixconfig.TopologyNetworkGroup{Name: ixconfig.String(netGrpName)}
-			cfg.Topology[0].DeviceGroup[0].NetworkGroup = []*ixconfig.TopologyNetworkGroup{ng}
+		dg := cfg.Topology[0].DeviceGroup[0]
+		// Normal network group
+		ng := &ixconfig.TopologyNetworkGroup{Name: ixconfig.String(netGrpName)}
+		dg.NetworkGroup = append(dg.NetworkGroup, ng)
+		// RSVP configuration
+		rsvpLSP := &ixconfig.TopologyRsvpteLsps{
+			RsvpP2PEgressLsps:  &ixconfig.TopologyRsvpP2PEgressLsps{},
+			RsvpP2PIngressLsps: &ixconfig.TopologyRsvpP2PIngressLsps{},
 		}
-		updateXPaths(cfg)
-		return &IxiaCfgClient{
+		rsvpNg := &ixconfig.TopologyNetworkGroup{
+			DeviceGroup: []*ixconfig.TopologyDeviceGroup{{
+				Ipv4Loopback: []*ixconfig.TopologyIpv4Loopback{{
+					RsvpteLsps: []*ixconfig.TopologyRsvpteLsps{rsvpLSP},
+				}},
+			}},
+		}
+		dg.NetworkGroup = append(dg.NetworkGroup, rsvpNg)
+		return &ixATE{
 			cfg: cfg,
 			intfs: map[string]*intf{
 				ifName: &intf{
-					deviceGroup: cfg.Topology[0].DeviceGroup[0],
+					deviceGroup: dg,
 					netToNetworkGroup: map[string]*ixconfig.TopologyNetworkGroup{
 						netGrpName: ng,
+					},
+					rsvpLSPs: map[string]*ixconfig.TopologyRsvpteLsps{
+						rsvpName: rsvpLSP,
 					},
 					link: cfg.Vport[0],
 				},
@@ -174,7 +201,6 @@ func TestAddTraffic(t *testing.T) {
 	tests := []struct {
 		desc                                    string
 		flow                                    *opb.Flow
-		cfgHasNetGrp                            bool
 		wantTrafficType                         trafficType
 		wantSrcEPs, wantDstEPs                  []string
 		wantStackCount                          int
@@ -270,7 +296,6 @@ func TestAddTraffic(t *testing.T) {
 			DstEndpoints: netwEPs,
 			Headers:      []*opb.Header{{Type: &opb.Header_Eth{&opb.EthernetHeader{}}}},
 		},
-		cfgHasNetGrp:    true,
 		wantTrafficType: ethTraffic,
 		wantSrcEPs:      netGrpEPs,
 		wantDstEPs:      netGrpEPs,
@@ -307,6 +332,33 @@ func TestAddTraffic(t *testing.T) {
 		wantSrcEPs:      devGrpEPs,
 		wantDstEPs:      devGrpEPs,
 		wantStackCount:  2,
+	}, {
+		desc: "non-IP lsp traffic flow",
+		flow: &opb.Flow{
+			Name:         flowName,
+			SrcEndpoints: lspEPs,
+			DstEndpoints: lspEPs,
+			Headers:      []*opb.Header{{Type: &opb.Header_Eth{&opb.EthernetHeader{}}}},
+		},
+		wantErr: true,
+	}, {
+		desc: "lsp traffic flow",
+		flow: &opb.Flow{
+			Name:         flowName,
+			SrcEndpoints: lspEPs,
+			DstEndpoints: lspEPs,
+			Headers: []*opb.Header{{
+				Type: &opb.Header_Eth{&opb.EthernetHeader{}},
+			}, {
+				Type: &opb.Header_Mpls{&opb.MplsHeader{}},
+			}, {
+				Type: &opb.Header_Ipv4{&opb.Ipv4Header{}},
+			}},
+		},
+		wantTrafficType: ipv4Traffic,
+		wantSrcEPs:      ingressLSPEPs,
+		wantDstEPs:      egressLSPEPs,
+		wantStackCount:  3,
 	}, {
 		desc: "attempted ingress tracking by endpoint for raw traffic flow",
 		flow: &opb.Flow{
@@ -465,7 +517,7 @@ func TestAddTraffic(t *testing.T) {
 	}}
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			c := baseClient(test.cfgHasNetGrp)
+			c := baseClient()
 			gotErr := c.addTraffic([]*opb.Flow{test.flow})
 			if (gotErr != nil) != test.wantErr {
 				t.Fatalf("addTraffic: unexpected error result, got err: %v, want err? %t", gotErr, test.wantErr)
@@ -474,7 +526,11 @@ func TestAddTraffic(t *testing.T) {
 				return
 			}
 
-			ti := c.cfg.Traffic.TrafficItem[0]
+			tiCfg, err := c.cfg.ResolvedConfig(c.cfg.Traffic.TrafficItem[0])
+			if err != nil {
+				t.Fatalf("could not resolve xpaths/references for traffic config: %v", err)
+			}
+			ti := tiCfg.(*ixconfig.TrafficTrafficItem)
 			if gotTrafficType := *(ti.TrafficType); test.wantTrafficType != trafficType(gotTrafficType) {
 				t.Errorf("addTraffic: unexpected traffic type for traffic item: got %q, want %q",
 					gotTrafficType, test.wantTrafficType)
@@ -488,6 +544,10 @@ func TestAddTraffic(t *testing.T) {
 			gotDstEPs := ti.EndpointSet[0].Destinations
 			if diff := cmp.Diff(test.wantDstEPs, gotDstEPs); diff != "" {
 				t.Errorf("addTraffic: unexpected destination endpoints diff: %s", diff)
+			}
+
+			if test.wantTrafficType == rawTraffic && (ti.RawTrafficRxPortsBehavior == nil || *(ti.RawTrafficRxPortsBehavior) != "loadBalanced") {
+				t.Error("addTraffic: unexpected loadBalanced RxPortsBehavior setting for rawTraffic: got: false, want: true")
 			}
 
 			// The len check is not '> 0' because TrackBy always includes at least one element to enable tracking.
@@ -542,7 +602,7 @@ func TestFrameRate(t *testing.T) {
 	tests := []struct {
 		desc             string
 		frameRatePB      *opb.FrameRate
-		wantFrameRate    *ixconfig.TrafficFrameRate
+		wantFrameRate    *ixconfig.TrafficTrafficItemConfigElementFrameRate
 		wantFrameRateMap map[string]interface{}
 	}{{
 		desc: "no frame rate set",
@@ -551,7 +611,7 @@ func TestFrameRate(t *testing.T) {
 		frameRatePB: &opb.FrameRate{
 			Type: &opb.FrameRate_Percent{Percent: 50},
 		},
-		wantFrameRate: &ixconfig.TrafficFrameRate{
+		wantFrameRate: &ixconfig.TrafficTrafficItemConfigElementFrameRate{
 			Type_: ixconfig.String("percentLineRate"),
 			Rate:  ixconfig.NumberFloat64(50),
 		},
@@ -563,7 +623,7 @@ func TestFrameRate(t *testing.T) {
 		frameRatePB: &opb.FrameRate{
 			Type: &opb.FrameRate_Bps{Bps: 1024},
 		},
-		wantFrameRate: &ixconfig.TrafficFrameRate{
+		wantFrameRate: &ixconfig.TrafficTrafficItemConfigElementFrameRate{
 			Type_:            ixconfig.String("bitsPerSecond"),
 			BitRateUnitsType: ixconfig.String("bitsPerSec"),
 			Rate:             ixconfig.NumberUint64(1024),
@@ -577,7 +637,7 @@ func TestFrameRate(t *testing.T) {
 		frameRatePB: &opb.FrameRate{
 			Type: &opb.FrameRate_Fps{Fps: 1000},
 		},
-		wantFrameRate: &ixconfig.TrafficFrameRate{
+		wantFrameRate: &ixconfig.TrafficTrafficItemConfigElementFrameRate{
 			Type_: ixconfig.String("framesPerSecond"),
 			Rate:  ixconfig.NumberUint64(1000),
 		},
@@ -592,7 +652,7 @@ func TestFrameRate(t *testing.T) {
 				t.Fatalf("frameRate: unexpected err: %v", gotErr)
 			}
 			if diff := jsonCfgDiff(t, test.wantFrameRate, gotFrameRate); diff != "" {
-				t.Errorf("frameRate: unexpected TrafficFrameRate diff (-want/+got): %s", diff)
+				t.Errorf("frameRate: unexpected TrafficTrafficItemConfigElementFrameRate diff (-want/+got): %s", diff)
 			}
 			if diff := cmp.Diff(test.wantFrameRateMap, gotFrameRateMap); diff != "" {
 				t.Errorf("frameRate: unexpected frame rate data map (-want/+got): %s", diff)
@@ -605,7 +665,7 @@ func TestFrameSize(t *testing.T) {
 	tests := []struct {
 		desc             string
 		frameSizePB      *opb.FrameSize
-		wantFrameSize    *ixconfig.TrafficFrameSize
+		wantFrameSize    *ixconfig.TrafficTrafficItemConfigElementFrameSize
 		wantFrameSizeMap map[string]interface{}
 		wantErr          string
 	}{{
@@ -625,7 +685,7 @@ func TestFrameSize(t *testing.T) {
 				ImixPreset: opb.FrameSize_IMIX_DEFAULT,
 			},
 		},
-		wantFrameSize: &ixconfig.TrafficFrameSize{
+		wantFrameSize: &ixconfig.TrafficTrafficItemConfigElementFrameSize{
 			Type_:              ixconfig.String("presetDistribution"),
 			PresetDistribution: ixconfig.String(`"imix"`),
 			QuadGaussian:       []float32{},
@@ -637,7 +697,7 @@ func TestFrameSize(t *testing.T) {
 	}, {
 		desc:        "fixed frame size",
 		frameSizePB: &opb.FrameSize{Type: &opb.FrameSize_Fixed{Fixed: 1500}},
-		wantFrameSize: &ixconfig.TrafficFrameSize{
+		wantFrameSize: &ixconfig.TrafficTrafficItemConfigElementFrameSize{
 			Type_:         ixconfig.String("fixed"),
 			FixedSize:     ixconfig.NumberUint32(1500),
 			QuadGaussian:  []float32{},
@@ -653,7 +713,7 @@ func TestFrameSize(t *testing.T) {
 				Random: &opb.FrameSize_Random{Min: 64, Max: 512},
 			},
 		},
-		wantFrameSize: &ixconfig.TrafficFrameSize{
+		wantFrameSize: &ixconfig.TrafficTrafficItemConfigElementFrameSize{
 			Type_:         ixconfig.String("random"),
 			RandomMin:     ixconfig.NumberUint32(64),
 			RandomMax:     ixconfig.NumberUint32(512),
@@ -667,19 +727,19 @@ func TestFrameSize(t *testing.T) {
 	}, {
 		desc: "custom frame sizes as weighted pairs",
 		frameSizePB: &opb.FrameSize{
-			Type: &opb.FrameSize_ImixCustom_ {
+			Type: &opb.FrameSize_ImixCustom_{
 				ImixCustom: &opb.FrameSize_ImixCustom{
 					Entries: []*opb.FrameSize_ImixCustomEntry{{
-						Size: 82,
+						Size:   82,
 						Weight: 35,
 					}, {
-						Size: 125,
+						Size:   125,
 						Weight: 22,
 					}},
 				},
 			},
 		},
-		wantFrameSize: &ixconfig.TrafficFrameSize{
+		wantFrameSize: &ixconfig.TrafficTrafficItemConfigElementFrameSize{
 			Type_:         ixconfig.String("weightedPairs"),
 			QuadGaussian:  []float32{},
 			WeightedPairs: []float32{82, 35, 125, 22},
@@ -695,7 +755,7 @@ func TestFrameSize(t *testing.T) {
 				t.Errorf("frameSize: got err: %v, want err %q", gotErr, test.wantErr)
 			}
 			if diff := jsonCfgDiff(t, test.wantFrameSize, gotFrameSize); diff != "" {
-				t.Errorf("frameSize: unexpected TrafficFrameSize diff (-want/+got): %s", diff)
+				t.Errorf("frameSize: unexpected TrafficTrafficItemConfigElementFrameSize diff (-want/+got): %s", diff)
 			}
 			if diff := cmp.Diff(test.wantFrameSizeMap, gotFrameSizeMap); diff != "" {
 				t.Errorf("frameSize: unexpected frame size data map (-want/+got): %s", diff)
@@ -708,7 +768,7 @@ func TestTransmissionControl(t *testing.T) {
 	tests := []struct {
 		desc             string
 		transmissionPB   *opb.Transmission
-		wantTransmission *ixconfig.TrafficTransmissionControl
+		wantTransmission *ixconfig.TrafficTrafficItemConfigElementTransmissionControl
 		wantErr          string
 	}{{
 		desc: "default",
@@ -738,7 +798,7 @@ func TestTransmissionControl(t *testing.T) {
 			Pattern:     opb.Transmission_CONTINUOUS,
 			MinGapBytes: 64,
 		},
-		wantTransmission: &ixconfig.TrafficTransmissionControl{
+		wantTransmission: &ixconfig.TrafficTrafficItemConfigElementTransmissionControl{
 			Type_:       ixconfig.String("continuous"),
 			MinGapBytes: ixconfig.NumberUint32(64),
 		},
@@ -762,7 +822,7 @@ func TestTransmissionControl(t *testing.T) {
 			PacketsPerBurst: 100,
 			InterburstGap:   &opb.Transmission_Bytes{Bytes: 64},
 		},
-		wantTransmission: &ixconfig.TrafficTransmissionControl{
+		wantTransmission: &ixconfig.TrafficTrafficItemConfigElementTransmissionControl{
 			Type_:               ixconfig.String("custom"),
 			EnableInterBurstGap: ixconfig.Bool(true),
 			MinGapBytes:         ixconfig.NumberUint32(0),
@@ -777,13 +837,65 @@ func TestTransmissionControl(t *testing.T) {
 			PacketsPerBurst: 100,
 			InterburstGap:   &opb.Transmission_Nanoseconds{Nanoseconds: 30},
 		},
-		wantTransmission: &ixconfig.TrafficTransmissionControl{
+		wantTransmission: &ixconfig.TrafficTrafficItemConfigElementTransmissionControl{
 			Type_:               ixconfig.String("custom"),
 			EnableInterBurstGap: ixconfig.Bool(true),
 			MinGapBytes:         ixconfig.NumberUint32(0),
 			BurstPacketCount:    ixconfig.NumberUint32(100),
 			InterBurstGapUnits:  ixconfig.String("nanoseconds"),
 			InterBurstGap:       ixconfig.NumberUint32(30),
+		},
+	}, {
+		desc: "burst packet count set for fixed frame count",
+		transmissionPB: &opb.Transmission{
+			Pattern:         opb.Transmission_FIXED_FRAME_COUNT,
+			PacketsPerBurst: 1,
+		},
+		wantErr: "burst packet count should not be set",
+	}, {
+		desc: "burst gap set for fixed fixed frame count",
+		transmissionPB: &opb.Transmission{
+			Pattern:       opb.Transmission_FIXED_FRAME_COUNT,
+			InterburstGap: &opb.Transmission_Bytes{Bytes: 64},
+		},
+		wantErr: "burst gap should not be set",
+	}, {
+		desc: "burst packet count set for duration transmission",
+		transmissionPB: &opb.Transmission{
+			Pattern:         opb.Transmission_FIXED_DURATION,
+			PacketsPerBurst: 1,
+		},
+		wantErr: "burst packet count should not be set",
+	}, {
+		desc: "burst gap set for duration transmission",
+		transmissionPB: &opb.Transmission{
+			Pattern:       opb.Transmission_FIXED_DURATION,
+			InterburstGap: &opb.Transmission_Bytes{Bytes: 64},
+		},
+		wantErr: "burst gap should not be set",
+	}, {
+		desc: "fixed frame count",
+		transmissionPB: &opb.Transmission{
+			Pattern:     opb.Transmission_FIXED_FRAME_COUNT,
+			MinGapBytes: 64,
+			FrameCount:  1000,
+		},
+		wantTransmission: &ixconfig.TrafficTrafficItemConfigElementTransmissionControl{
+			Type_:       ixconfig.String("fixedFrameCount"),
+			MinGapBytes: ixconfig.NumberUint32(64),
+			FrameCount:  ixconfig.NumberUint32(1000),
+		},
+	}, {
+		desc: "fixed duration",
+		transmissionPB: &opb.Transmission{
+			Pattern:      opb.Transmission_FIXED_DURATION,
+			MinGapBytes:  64,
+			DurationSecs: 100,
+		},
+		wantTransmission: &ixconfig.TrafficTrafficItemConfigElementTransmissionControl{
+			Type_:       ixconfig.String("fixedDuration"),
+			MinGapBytes: ixconfig.NumberUint32(64),
+			Duration:    ixconfig.NumberUint32(100),
 		},
 	}}
 	for _, test := range tests {
@@ -793,7 +905,7 @@ func TestTransmissionControl(t *testing.T) {
 				t.Errorf("transmissionControl: got err: %v, want err %q", gotErr, test.wantErr)
 			}
 			if diff := jsonCfgDiff(t, test.wantTransmission, gotTransmission); diff != "" {
-				t.Errorf("transmissionControl: unexpected TrafficTransmissionControl diff (-want/+got): %s", diff)
+				t.Errorf("transmissionControl: unexpected TrafficTrafficItemConfigElementTransmissionControl diff (-want/+got): %s", diff)
 			}
 		})
 	}

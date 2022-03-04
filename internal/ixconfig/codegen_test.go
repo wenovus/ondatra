@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -40,12 +41,12 @@ func TestMarshalUnmarshalConfig(t *testing.T) {
 	}, {
 		desc:         "No change from updating XPaths w/o any config changes.",
 		fromJSONFile: "ixia_full_conf_modified.json",
-		transform:    (*Ixnetwork).updateAllXPaths,
+		transform:    (*Ixnetwork).updateAllXPathsAndRefs,
 		wantJSONFile: "ixia_full_conf_modified.json",
 	}, {
 		desc:         "Fix missing XPaths.",
 		fromJSONFile: "missing_xpath_conf.json",
-		transform:    (*Ixnetwork).updateAllXPaths,
+		transform:    (*Ixnetwork).updateAllXPathsAndRefs,
 		wantJSONFile: "filled_xpath_conf.json",
 	}}
 	for _, tc := range tests {
@@ -84,5 +85,74 @@ func TestMarshalUnmarshalConfig(t *testing.T) {
 				t.Errorf("Unexpected JSON representation, diff: (-got +want)\n%s.", diff)
 			}
 		})
+	}
+}
+
+// TestCopy tests that Copy produces a valid deep copy of IxNetwork config objects.
+func TestCopy(t *testing.T) {
+	orig := &Ixnetwork{
+		Topology: []*Topology{{
+			Name:   String("someName"),
+			Vports: []string{"/vports[1]"},
+			DeviceGroup: []*TopologyDeviceGroup{{
+				Enabled: MultivalueTrue(),
+			}},
+		}},
+		Vport: []*Vport{{Name: String("somePort")}},
+	}
+	orig.Topology[0].SetVportsRefs([]IxiaCfgNode{orig.Vport[0]})
+
+	cp := orig.Copy()
+	if diff := cmp.Diff(orig, cp, cmp.Exporter(func(reflect.Type) bool { return true })); diff != "" {
+		t.Fatalf("Incorrect data in copied config, diff (-got +want):\n%s", diff)
+	}
+	// Check that the copy actually points to different subconfigs than the original.
+	testPtrDiff := func(a, b interface{}, itemDesc string) {
+		if reflect.ValueOf(a).Pointer() == reflect.ValueOf(b).Pointer() {
+			t.Errorf("Pointers for config object %q are the same", itemDesc)
+		}
+	}
+	testPtrDiff(orig.Topology, cp.Topology, "topology list")
+	origTopo := orig.Topology[0]
+	cpTopo := cp.Topology[0]
+	testPtrDiff(origTopo, cpTopo, "topology")
+	testPtrDiff(origTopo.Name, cpTopo.Name, "topology name")
+	testPtrDiff(origTopo.Vports, cpTopo.Vports, "topology port list")
+	testPtrDiff(origTopo.vportsRefs[0], cpTopo.vportsRefs[0], "topology referenced port")
+	origDg := origTopo.DeviceGroup[0]
+	cpDg := cpTopo.DeviceGroup[0]
+	testPtrDiff(origDg, cpDg, "device group")
+	origMV := origDg.Enabled
+	cpMV := cpDg.Enabled
+	testPtrDiff(origMV, cpMV, "enabled multivalue")
+	testPtrDiff(origMV.SingleValue, cpMV.SingleValue, "multivalue single value")
+
+	// Test the Vport/reference in the topology are the same object in the copied config.
+	if reflect.ValueOf(cpTopo.vportsRefs[0]).Pointer() != reflect.ValueOf(cp.Vport[0]).Pointer() {
+		t.Error("Configured vport and vport referenced in topology are different objects")
+	}
+}
+
+// TestRefUpdate tests that configured config references are correctly updated.
+func TestRefUpdate(t *testing.T) {
+	cfg := &Ixnetwork{
+		Topology: []*Topology{{
+			Name: String("someName"),
+			DeviceGroup: []*TopologyDeviceGroup{{
+				Enabled: MultivalueTrue(),
+			}},
+		}},
+		Vport: []*Vport{{Name: String("somePort")}},
+	}
+	topo := cfg.Topology[0]
+	vport := cfg.Vport[0]
+	topo.SetVportsRefs([]IxiaCfgNode{vport})
+	vport.SetConnectedToRef(topo) // This is not a valid config, just an example for testing singular refs.
+	cfg.updateAllXPathsAndRefs()
+	if len(topo.Vports) != 1 || topo.Vports[0] != vport.XPath().String() {
+		t.Errorf("Vport reference in Topology config not correctly updated: got %v, want %v", topo.Vports, []string{vport.XPath().String()})
+	}
+	if *(vport.ConnectedTo) != topo.XPath().String() {
+		t.Errorf("Topology reference in Vport config not correctly updated: got %q, want %q", *(vport.ConnectedTo), topo.XPath().String())
 	}
 }

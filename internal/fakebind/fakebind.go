@@ -21,10 +21,10 @@ import (
 
 	log "github.com/golang/glog"
 	"google.golang.org/grpc"
-	"github.com/openconfig/ondatra/internal/binding"
-	"github.com/openconfig/ondatra/internal/reservation"
+	"github.com/openconfig/ondatra/binding"
 
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
+	grpb "github.com/openconfig/gribi/v1/proto/service"
 	opb "github.com/openconfig/ondatra/proto"
 	p4pb "github.com/p4lang/p4runtime/go/p4/v1"
 )
@@ -33,19 +33,22 @@ var _ binding.Binding = &Binding{}
 
 // Binding is a fake testbed binding comprised of stub implementations.
 type Binding struct {
-	Reservation   *reservation.Reservation
-	ConfigPusher  func(context.Context, *reservation.DUT, string, *binding.ConfigOptions) error
-	CLIDialer     func(context.Context, *reservation.DUT, ...grpc.DialOption) (binding.StreamClient, error)
-	ConsoleDialer func(context.Context, *reservation.DUT, ...grpc.DialOption) (binding.StreamClient, error)
-	GNMIDialer    func(context.Context, *reservation.DUT, ...grpc.DialOption) (gpb.GNMIClient, error)
-	GNOIDialer    func(context.Context, *reservation.DUT, ...grpc.DialOption) (binding.GNOIClients, error)
-	P4RTDialer      func(context.Context, *reservation.DUT, ...grpc.DialOption) (p4pb.P4RuntimeClient, error)
-	IxNetworkDialer func(context.Context, *reservation.ATE) (*binding.IxNetwork, error)
+	Reservation   *binding.Reservation
+	ResvFetcher   func(context.Context, string) (*binding.Reservation, error)
+	ConfigPusher  func(context.Context, *binding.DUT, string, bool) error
+	CLIDialer     func(context.Context, *binding.DUT, ...grpc.DialOption) (binding.StreamClient, error)
+	ConsoleDialer func(context.Context, *binding.DUT, ...grpc.DialOption) (binding.StreamClient, error)
+	GNMIDialer    func(context.Context, *binding.DUT, ...grpc.DialOption) (gpb.GNMIClient, error)
+	GNOIDialer    func(context.Context, *binding.DUT, ...grpc.DialOption) (binding.GNOIClients, error)
+	GRIBIDialer     func(context.Context, *binding.DUT, ...grpc.DialOption) (grpb.GRIBIClient, error)
+	P4RTDialer      func(context.Context, *binding.DUT, ...grpc.DialOption) (p4pb.P4RuntimeClient, error)
+	IxNetworkDialer func(context.Context, *binding.ATE) (*binding.IxNetwork, error)
 }
 
 // Reset zeros out all the stub implementations.
 func (b *Binding) Reset() {
 	b.Reservation = nil
+	b.ResvFetcher = nil
 	b.ConfigPusher = nil
 	b.CLIDialer = nil
 	b.ConsoleDialer = nil
@@ -55,10 +58,14 @@ func (b *Binding) Reset() {
 	b.IxNetworkDialer = nil
 }
 
-// Reserve reserves a new fake testbed, reading the definition from the given path.
-// If the path is a plain filename, interprets it relative to the target directory.
-func (b *Binding) Reserve(_ context.Context, _ *opb.Testbed, _, _ time.Duration) (*reservation.Reservation, error) {
+// Reserve returns b.Reservation.
+func (b *Binding) Reserve(context.Context, *opb.Testbed, time.Duration, time.Duration, map[string]string) (*binding.Reservation, error) {
 	return b.Reservation, nil
+}
+
+// FetchReservation delegates to b.ResvFetcher.
+func (b *Binding) FetchReservation(ctx context.Context, id string) (*binding.Reservation, error) {
+	return b.ResvFetcher(ctx, id)
 }
 
 // Release is a noop.
@@ -67,42 +74,47 @@ func (b *Binding) Release(context.Context) (rerr error) {
 }
 
 // DialATEGNMI is a noop.
-func (b *Binding) DialATEGNMI(ctx context.Context, ate *reservation.ATE, opts ...grpc.DialOption) (gpb.GNMIClient, error) {
+func (b *Binding) DialATEGNMI(ctx context.Context, ate *binding.ATE, opts ...grpc.DialOption) (gpb.GNMIClient, error) {
 	return nil, nil
 }
 
 // PushConfig delegates to b.ConfigPusher.
-func (b *Binding) PushConfig(ctx context.Context, dut *reservation.DUT, config string, opts *binding.ConfigOptions) error {
-	return b.ConfigPusher(ctx, dut, config, opts)
+func (b *Binding) PushConfig(ctx context.Context, dut *binding.DUT, config string, reset bool) error {
+	return b.ConfigPusher(ctx, dut, config, reset)
 }
 
 // DialGNMI creates a client connection to the fake GNMI server.
-func (b *Binding) DialGNMI(ctx context.Context, dut *reservation.DUT, opts ...grpc.DialOption) (gpb.GNMIClient, error) {
+func (b *Binding) DialGNMI(ctx context.Context, dut *binding.DUT, opts ...grpc.DialOption) (gpb.GNMIClient, error) {
 	return b.GNMIDialer(ctx, dut, opts...)
 }
 
 // DialGNOI creates a client connection to the fake GNOI server.
-func (b *Binding) DialGNOI(ctx context.Context, dut *reservation.DUT, opts ...grpc.DialOption) (binding.GNOIClients, error) {
+func (b *Binding) DialGNOI(ctx context.Context, dut *binding.DUT, opts ...grpc.DialOption) (binding.GNOIClients, error) {
 	return b.GNOIDialer(ctx, dut, opts...)
 }
 
+// DialGRIBI creates a client connection to the fake GRIBI server.
+func (b *Binding) DialGRIBI(ctx context.Context, dut *binding.DUT, opts ...grpc.DialOption) (grpb.GRIBIClient, error) {
+	return b.GRIBIDialer(ctx, dut, opts...)
+}
+
 // DialP4RT creates a client connection to the fake P4RT server.
-func (b *Binding) DialP4RT(ctx context.Context, dut *reservation.DUT, opts ...grpc.DialOption) (p4pb.P4RuntimeClient, error) {
+func (b *Binding) DialP4RT(ctx context.Context, dut *binding.DUT, opts ...grpc.DialOption) (p4pb.P4RuntimeClient, error) {
 	return b.P4RTDialer(ctx, dut, opts...)
 }
 
 // DialCLI creates a client connection to the fake CLI server.
-func (b *Binding) DialCLI(ctx context.Context, dut *reservation.DUT, opts ...grpc.DialOption) (binding.StreamClient, error) {
+func (b *Binding) DialCLI(ctx context.Context, dut *binding.DUT, opts ...grpc.DialOption) (binding.StreamClient, error) {
 	return b.CLIDialer(ctx, dut, opts...)
 }
 
 // DialConsole creates a client connection to the fake Console server.
-func (b *Binding) DialConsole(ctx context.Context, dut *reservation.DUT, opts ...grpc.DialOption) (binding.StreamClient, error) {
+func (b *Binding) DialConsole(ctx context.Context, dut *binding.DUT, opts ...grpc.DialOption) (binding.StreamClient, error) {
 	return b.ConsoleDialer(ctx, dut, opts...)
 }
 
 // DialIxNetwork delegates to b.IxNetworkDialer.
-func (b *Binding) DialIxNetwork(ctx context.Context, ate *reservation.ATE) (*binding.IxNetwork, error) {
+func (b *Binding) DialIxNetwork(ctx context.Context, ate *binding.ATE) (*binding.IxNetwork, error) {
 	return b.IxNetworkDialer(ctx, ate)
 }
 

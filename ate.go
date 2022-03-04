@@ -14,19 +14,33 @@
 
 package ondatra
 
-import "github.com/openconfig/ondatra/internal/reservation"
+import (
+	"github.com/open-traffic-generator/snappi/gosnappi"
+	"github.com/openconfig/ondatra/binding"
+)
 
 // ATEDevice is an automated test equipment.
 type ATEDevice struct {
 	*Device
+	otg *OTG
+}
+
+// OTG returns a handle to the OTG API.
+func (a *ATEDevice) OTG() *OTG {
+	if a.otg == nil {
+		// TODO: Replace with a Binding.DialOTG method.
+		api := gosnappi.NewApi()
+		a.otg = &OTG{ate: a.res.(*binding.ATE), api: api}
+	}
+	return a.otg
 }
 
 // Topology returns a handle to the topology API.
 func (a *ATEDevice) Topology() *Topology {
-	return &Topology{a.res.(*reservation.ATE)}
+	return &Topology{a.res.(*binding.ATE)}
 }
 
 // Traffic returns a handle to the traffic API.
 func (a *ATEDevice) Traffic() *Traffic {
-	return &Traffic{a.res.(*reservation.ATE)}
+	return &Traffic{a.res.(*binding.ATE)}
 }

@@ -23,6 +23,9 @@ type RSVP struct {
 	pb *opb.RsvpConfig
 }
 
+// Implement the Endpoint marker interface.
+func (*RSVP) isEndpoint() {}
+
 // WithISISReachability configures which IS-IS reachability config defines the
 // routes available for LSPs.
 func (r *RSVP) WithISISReachability(isr string) *RSVP {
@@ -99,6 +102,18 @@ func (r *RSVPIngressLSP) WithFastReroute(enable bool) *RSVPIngressLSP {
 // WithPathReoptimization enables or disables path re-optimization for the RSVP ingress LSP.
 func (r *RSVPIngressLSP) WithPathReoptimization(enable bool) *RSVPIngressLSP {
 	r.pb.PathReoptimization = enable
+	return r
+}
+
+// WithTunnelID sets the tunnel ID for the RSVP ingress LSP.
+func (r *RSVPIngressLSP) WithTunnelID(id uint16) *RSVPIngressLSP {
+	r.pb.TunnelId = uint32(id)
+	return r
+}
+
+// WithLSPID sets the LSP ID for the RSVP ingress LSP.
+func (r *RSVPIngressLSP) WithLSPID(id uint16) *RSVPIngressLSP {
+	r.pb.LspId = uint32(id)
 	return r
 }
 

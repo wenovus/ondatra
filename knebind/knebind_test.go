@@ -16,59 +16,103 @@ package knebind
 
 import (
 	"golang.org/x/net/context"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/ssh"
 	"github.com/openconfig/gnmi/errdiff"
-	"github.com/openconfig/ondatra/internal/reservation"
+	"github.com/openconfig/ondatra/binding"
+	"github.com/openconfig/ondatra/knebind/solver"
 
-	kpb "github.com/google/kne/proto/topo"
+	tpb "github.com/google/kne/proto/topo"
 	opb "github.com/openconfig/ondatra/proto"
 )
 
 func TestReserve(t *testing.T) {
-	topo := &kpb.Topology{
-		Nodes: []*kpb.Node{{
-			Name:     "node1",
-			Type:     kpb.Node_ARISTA_CEOS,
-			Services: map[uint32]*kpb.Service{1234: {Name: "gnmi"}},
-			Interfaces: map[string]*kpb.Interface{
-				"eth1": {
-					Name: "Ethernet1",
-				},
-				"eth2": {
-					Name: "Ethernet2",
-				},
-			},
-		}, {
-			Name:     "node2",
-			Type:     kpb.Node_CISCO_CXR,
-			Services: map[uint32]*kpb.Service{2345: {Name: "gnmi"}},
-			Interfaces: map[string]*kpb.Interface{
-				"eth1": {},
-				"eth2": {},
-			},
-		}, {
-			Name:     "node3",
-			Type:     kpb.Node_JUNIPER_CEVO,
-			Services: map[uint32]*kpb.Service{3456: {Name: "gnmi"}},
-			Interfaces: map[string]*kpb.Interface{
-				"eth1": {},
-			},
-		}, {
-			Name: "node4",
-			Type: kpb.Node_IXIA_TG,
-			Interfaces: map[string]*kpb.Interface{
-				"eth1": {},
-			},
-		}},
-		Links: []*kpb.Link{
-			{ANode: "node1", AInt: "eth1", ZNode: "node2", ZInt: "eth1"},
-			{ANode: "node2", AInt: "eth2", ZNode: "node3", ZInt: "eth1"},
-			{ANode: "node1", AInt: "eth2", ZNode: "node4", ZInt: "eth1"},
-		},
-	}
+	const topo = `
+		nodes: {
+		  name: "node1"
+      type: ARISTA_CEOS
+      services: {
+        key: 1234
+        value: {
+          name: "gnmi"
+				}
+			}
+			interfaces: {
+			  key: "eth1"
+				value: {
+				  name: "Ethernet1"
+				}
+			}
+			interfaces: {
+			  key: "eth2"
+				value: {
+				  name: "Ethernet2"
+				}
+			}
+    }
+		nodes: {
+		  name: "node2"
+      type: CISCO_CXR
+      services: {
+        key: 2345
+        value: {
+          name: "gnmi"
+				}
+			}
+			interfaces: {
+			  key: "eth1"
+				value: {}
+			}
+			interfaces: {
+			  key: "eth2"
+				value: {}
+			}
+    }
+		nodes: {
+		  name: "node3"
+      type: JUNIPER_CEVO
+      services: {
+        key: 3456
+        value: {
+          name: "gnmi"
+				}
+			}
+			interfaces: {
+			  key: "eth1"
+				value: {}
+			}
+    }
+		nodes: {
+		  name: "node4"
+      type: IXIA_TG
+			interfaces: {
+			  key: "eth1"
+				value: {}
+			}
+    }
+		links: {
+		  a_node: "node1"
+		  a_int: "eth1"
+		  z_node: "node2"
+		  z_int: "eth1"
+		}
+		links: {
+		  a_node: "node2"
+		  a_int: "eth2"
+		  z_node: "node3"
+		  z_int: "eth1"
+		}
+		links: {
+		  a_node: "node1"
+		  a_int: "eth2"
+		  z_node: "node4"
+		  z_int: "eth1"
+		}`
 	dut1 := &opb.Device{
 		Id:     "dut1",
 		Vendor: opb.Device_ARISTA,
@@ -99,124 +143,121 @@ func TestReserve(t *testing.T) {
 		A: "dut1:port2",
 		B: "ate:port1",
 	}
-	fetchTopo = func(*Config) (*kpb.Topology, error) {
-		return topo, nil
+	kneCmdFn = func(cfg *Config, args ...string) ([]byte, error) {
+		return []byte(topo), nil
 	}
-	wantDUT1 := &reservation.DUT{&reservation.Dims{
+	wantDUT1 := &binding.DUT{&binding.Dims{
 		Name:            "node1",
 		Vendor:          opb.Device_ARISTA,
 		HardwareModel:   "ARISTA_CEOS",
 		SoftwareVersion: "ARISTA_CEOS",
-		Ports: map[string]*reservation.Port{
+		Ports: map[string]*binding.Port{
 			"port1": {Name: "Ethernet1"},
 			"port2": {Name: "Ethernet2"},
 		},
 	}}
-	wantDUT2 := &reservation.DUT{&reservation.Dims{
+	wantDUT2 := &binding.DUT{&binding.Dims{
 		Name:            "node2",
 		Vendor:          opb.Device_CISCO,
 		HardwareModel:   "CISCO_CXR",
 		SoftwareVersion: "CISCO_CXR",
-		Ports: map[string]*reservation.Port{
+		Ports: map[string]*binding.Port{
 			"port1": {Name: "eth1"},
 			"port2": {Name: "eth2"},
 		},
 	}}
-	wantDUT3 := &reservation.DUT{&reservation.Dims{
+	wantDUT3 := &binding.DUT{&binding.Dims{
 		Name:            "node3",
 		Vendor:          opb.Device_JUNIPER,
 		HardwareModel:   "JUNIPER_CEVO",
 		SoftwareVersion: "JUNIPER_CEVO",
-		Ports: map[string]*reservation.Port{
+		Ports: map[string]*binding.Port{
 			"port1": {Name: "eth1"},
 		},
 	}}
-	wantATE := &reservation.ATE{&reservation.Dims{
+	wantATE := &binding.ATE{&binding.Dims{
 		Name:            "node4",
 		Vendor:          opb.Device_IXIA,
 		HardwareModel:   "IXIA_TG",
 		SoftwareVersion: "IXIA_TG",
-		Ports: map[string]*reservation.Port{
+		Ports: map[string]*binding.Port{
 			"port1": {Name: "eth1"},
 		},
 	}}
+	bind := &Bind{cfg: &Config{}}
 
 	tests := []struct {
-		name    string
+		desc    string
 		tb      *opb.Testbed
-		wantRes *reservation.Reservation
+		wantRes *binding.Reservation
 	}{{
-		name: "one dut",
+		desc: "one dut",
 		tb: &opb.Testbed{
 			Duts: []*opb.Device{dut3},
 		},
-		wantRes: &reservation.Reservation{
-			DUTs: map[string]*reservation.DUT{
+		wantRes: &binding.Reservation{
+			DUTs: map[string]*binding.DUT{
 				"dut3": wantDUT3,
 			},
-			ATEs: map[string]*reservation.ATE{},
+			ATEs: map[string]*binding.ATE{},
 		},
 	}, {
-		name: "one ate",
+		desc: "one ate",
 		tb: &opb.Testbed{
 			Ates: []*opb.Device{ate},
 		},
-		wantRes: &reservation.Reservation{
-			DUTs: map[string]*reservation.DUT{},
-			ATEs: map[string]*reservation.ATE{
+		wantRes: &binding.Reservation{
+			DUTs: map[string]*binding.DUT{},
+			ATEs: map[string]*binding.ATE{
 				"ate": wantATE,
 			},
 		},
 	}, {
-		name: "two duts",
+		desc: "two duts",
 		tb: &opb.Testbed{
 			Duts:  []*opb.Device{dut1, dut2},
 			Links: []*opb.Link{link12},
 		},
-		wantRes: &reservation.Reservation{
-			DUTs: map[string]*reservation.DUT{
+		wantRes: &binding.Reservation{
+			DUTs: map[string]*binding.DUT{
 				"dut1": wantDUT1,
 				"dut2": wantDUT2,
 			},
-			ATEs: map[string]*reservation.ATE{},
+			ATEs: map[string]*binding.ATE{},
 		},
 	}, {
-		name: "dut and ate",
+		desc: "dut and ate",
 		tb: &opb.Testbed{
 			Duts:  []*opb.Device{dut1},
 			Ates:  []*opb.Device{ate},
 			Links: []*opb.Link{link14},
 		},
-		wantRes: &reservation.Reservation{
-			DUTs: map[string]*reservation.DUT{
+		wantRes: &binding.Reservation{
+			DUTs: map[string]*binding.DUT{
 				"dut1": wantDUT1,
 			},
-			ATEs: map[string]*reservation.ATE{
+			ATEs: map[string]*binding.ATE{
 				"ate": wantATE,
 			},
 		},
 	}, {
-		name: "three duts",
+		desc: "three duts",
 		tb: &opb.Testbed{
 			Duts:  []*opb.Device{dut1, dut2, dut3},
 			Links: []*opb.Link{link12, link23},
 		},
-		wantRes: &reservation.Reservation{
-			DUTs: map[string]*reservation.DUT{
+		wantRes: &binding.Reservation{
+			DUTs: map[string]*binding.DUT{
 				"dut1": wantDUT1,
 				"dut2": wantDUT2,
 				"dut3": wantDUT3,
 			},
-			ATEs: map[string]*reservation.ATE{},
+			ATEs: map[string]*binding.ATE{},
 		},
 	}}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			b, err := New(&Config{})
-			if err != nil {
-				t.Fatalf("New failed: %v", err)
-			}
-			gotRes, err := b.Reserve(context.Background(), test.tb, time.Minute, time.Minute)
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			gotRes, err := bind.Reserve(context.Background(), tt.tb, time.Minute, time.Minute, nil)
 			if err != nil {
 				t.Fatalf("Reserve() got error: %v", err)
 			}
@@ -224,7 +265,7 @@ func TestReserve(t *testing.T) {
 				t.Errorf("Reserve() got reservation missing ID: %v", gotRes)
 			}
 			gotRes.ID = ""
-			if diff := cmp.Diff(test.wantRes, gotRes); diff != "" {
+			if diff := cmp.Diff(tt.wantRes, gotRes); diff != "" {
 				t.Errorf("Reserve() got unexpected diff in reservation (-want,+got): %s", diff)
 			}
 		})
@@ -232,62 +273,65 @@ func TestReserve(t *testing.T) {
 }
 
 func TestReserveErrors(t *testing.T) {
+	bind := &Bind{cfg: &Config{}}
+
 	tests := []struct {
-		name    string
-		tb      *opb.Testbed
-		topo    *kpb.Topology
-		wantErr string
+		desc        string
+		tb          *opb.Testbed
+		topo        string
+		wantErr     string
+		wantGNMIErr string
 	}{{
-		name:    "too few nodes",
+		desc:    "too few nodes",
 		tb:      &opb.Testbed{Duts: []*opb.Device{{Id: "dut1"}}},
 		wantErr: "Not enough nodes",
 	}, {
-		name:    "too few links",
+		desc:    "too few links",
 		tb:      &opb.Testbed{Links: []*opb.Link{{A: "dut1:port1", B: "dut2:port1"}}},
 		wantErr: "Not enough links",
 	}, {
-		name: "missing gnmi",
+		desc: "missing gnmi",
 		tb: &opb.Testbed{
 			Duts: []*opb.Device{{Id: "dut1"}},
 		},
-		topo: &kpb.Topology{
-			Nodes: []*kpb.Node{{
-				Name: "node1",
-				Type: kpb.Node_ARISTA_CEOS,
-			}},
-		},
-		wantErr: "GNMI",
+		topo: `
+		  nodes: {
+		    name: "node1"
+        type: ARISTA_CEOS
+		  }
+		`,
+		wantGNMIErr: "gnmi",
 	}, {
-		name: "no match for DUT",
+		desc: "no match for DUT",
 		tb: &opb.Testbed{
 			Duts: []*opb.Device{{
 				Id:     "dut1",
 				Vendor: opb.Device_ARISTA,
 			}},
 		},
-		topo: &kpb.Topology{
-			Nodes: []*kpb.Node{{
-				Name: "node1",
-				Type: kpb.Node_CISCO_CXR,
-			}},
-		},
+		topo: `
+		  nodes: {
+		    name: "node1"
+        type: CISCO_CXR
+		  }
+		`,
 		wantErr: "No node in KNE topology to match testbed",
 	}, {
-		name: "no match for ATE",
+		desc: "no match for ATE",
 		tb: &opb.Testbed{
 			Ates: []*opb.Device{{
 				Id: "ate1",
 			}},
 		},
-		topo: &kpb.Topology{
-			Nodes: []*kpb.Node{{
-				Name: "node1",
-				Type: kpb.Node_CISCO_CXR,
-			}},
-		},
+		topo: `
+		  nodes: {
+		    name: "node1"
+        type: CISCO_CXR
+		  }
+		`,
 		wantErr: "No node in KNE topology to match testbed",
 	}, {
-		name: "no node combination",
+		desc: "no node combination",
 		tb: &opb.Testbed{
 			Duts: []*opb.Device{{
 				Id:     "dut1",
@@ -297,15 +341,19 @@ func TestReserveErrors(t *testing.T) {
 				Vendor: opb.Device_ARISTA,
 			}},
 		},
-		topo: &kpb.Topology{
-			Nodes: []*kpb.Node{
-				{Name: "node1", Type: kpb.Node_ARISTA_CEOS},
-				{Name: "node2", Type: kpb.Node_CISCO_CXR},
-			},
-		},
+		topo: `
+		  nodes: {
+		    name: "node1"
+        type: ARISTA_CEOS
+		  }
+		  nodes: {
+		    name: "node2"
+        type: CISCO_CXR
+		  }
+		`,
 		wantErr: "No combination of nodes",
 	}, {
-		name: "no link combination",
+		desc: "no link combination",
 		tb: &opb.Testbed{
 			Duts: []*opb.Device{{
 				Id:     "dut1",
@@ -329,32 +377,256 @@ func TestReserveErrors(t *testing.T) {
 				{A: "dut3:port1", B: "dut4:port1"},
 			},
 		},
-		topo: &kpb.Topology{
-			Nodes: []*kpb.Node{
-				{Name: "node1", Type: kpb.Node_ARISTA_CEOS},
-				{Name: "node2", Type: kpb.Node_ARISTA_CEOS},
-				{Name: "node3", Type: kpb.Node_JUNIPER_VMX},
-				{Name: "node4", Type: kpb.Node_JUNIPER_VMX},
-			},
-			Links: []*kpb.Link{
-				{ANode: "node1", AInt: "eth1", ZNode: "node3", ZInt: "eth1"},
-				{ANode: "node2", AInt: "eth1", ZNode: "node4", ZInt: "eth1"},
-			},
-		},
+		topo: `
+		  nodes: {
+		    name: "node1"
+        type: ARISTA_CEOS
+		  }
+		  nodes: {
+		    name: "node2"
+        type: ARISTA_CEOS
+		  }
+		  nodes: {
+		    name: "node3"
+        type: JUNIPER_VMX
+		  }
+		  nodes: {
+		    name: "node4"
+        type: JUNIPER_VMX
+		  }
+			links: {
+		    a_node: "node1"
+		    a_int: "eth1"
+		    z_node: "node3"
+		    z_int: "eth1"
+		  }
+			links: {
+		    a_node: "node2"
+		    a_int: "eth1"
+		    z_node: "node4"
+		    z_int: "eth1"
+		  }
+		`,
 		wantErr: "No KNE topology",
 	}}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			fetchTopo = func(*Config) (*kpb.Topology, error) {
-				return test.topo, nil
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			kneCmdFn = func(cfg *Config, args ...string) ([]byte, error) {
+				return []byte(tt.topo), nil
 			}
-			b, err := New(&Config{})
+			res, gotErr := bind.Reserve(context.Background(), tt.tb, time.Minute, time.Minute, nil)
+			if diff := errdiff.Substring(gotErr, tt.wantErr); diff != "" {
+				t.Fatalf("Reserve() got unexpected error diff: %s", diff)
+			}
+			if tt.wantErr != "" {
+				return
+			}
+			d, ok := res.DUTs["dut1"]
+			if !ok {
+				t.Fatalf("Node %q not found in topology", "node1")
+			}
+			_, gnmiErr := bind.DialGNMI(context.Background(), d)
+			if diff := errdiff.Substring(gnmiErr, tt.wantGNMIErr); diff != "" {
+				t.Errorf("DialGNMI() got unexpected error diff: %s", diff)
+			}
+		})
+	}
+}
+
+func TestServices(t *testing.T) {
+	bind := &Bind{cfg: &Config{}}
+
+	tests := []struct {
+		desc         string
+		tb           *opb.Testbed
+		topo         string
+		serviceCheck func(t *testing.T, b binding.Binding, d *binding.DUT)
+	}{{
+		desc: "missing gnmi",
+		tb: &opb.Testbed{
+			Duts: []*opb.Device{{Id: "dut1"}},
+		},
+		topo: `
+		  nodes: {
+		    name: "node1"
+        type: ARISTA_CEOS
+		  }
+		`,
+		serviceCheck: func(t *testing.T, b binding.Binding, d *binding.DUT) {
+			t.Helper()
+			if _, err := b.DialGNMI(context.Background(), d); err == nil {
+				t.Fatalf("DialGNMI() got unexpected error: %v", err)
+			}
+		},
+	}, {
+		desc: "missing gribi",
+		tb: &opb.Testbed{
+			Duts: []*opb.Device{{Id: "dut1"}},
+		},
+		topo: `
+		  nodes: {
+		    name: "node1"
+        type: ARISTA_CEOS
+		  }
+		`,
+		serviceCheck: func(t *testing.T, b binding.Binding, d *binding.DUT) {
+			t.Helper()
+			if _, err := b.DialGRIBI(context.Background(), d); err == nil {
+				t.Fatalf("DialGRIBI() got unexpected error: %v", err)
+			}
+		},
+	}, {
+		desc: "missing p4rt",
+		tb: &opb.Testbed{
+			Duts: []*opb.Device{{
+				Id: "dut1",
+			}},
+		},
+		topo: `
+		  nodes: {
+		    name: "node1"
+        type: CISCO_CXR
+				services {
+				  key: 9339
+					value {
+					  name: "gnmi"
+						outside: 9339
+						outside_ip: "1.1.1.1"
+					}
+				}
+		  }
+		`,
+		serviceCheck: func(t *testing.T, b binding.Binding, d *binding.DUT) {
+			t.Helper()
+			if _, err := b.DialP4RT(context.Background(), d); err == nil {
+				t.Fatalf("DialP4RT() got unexpected error: %v", err)
+			}
+		},
+	}, {
+		desc: "valid",
+		tb: &opb.Testbed{
+			Duts: []*opb.Device{{
+				Id: "dut1",
+			}},
+		},
+		topo: `
+		  nodes: {
+		    name: "node1"
+        type: CISCO_CXR
+				services {
+				  key: 9336
+					value {
+					  name: "p4rt"
+						outside: 9336
+						outside_ip: "1.1.1.1"
+					}
+				}
+				services {
+				  key: 9339
+					value {
+					  name: "gnmi"
+						outside: 9339
+						outside_ip: "1.1.1.1"
+					}
+				}
+				services {
+				  key: 4242
+					value {
+					  name: "gribi"
+						outside: 4242
+						outside_ip: "1.1.1.1"
+					}
+				}
+		  }
+		`,
+		serviceCheck: func(t *testing.T, b binding.Binding, d *binding.DUT) {
+			t.Helper()
+			if _, err := b.DialGNMI(context.Background(), d); err != nil {
+				t.Fatalf("DialGNMI() got unexpected error: %v", err)
+			}
+			if _, err := b.DialGRIBI(context.Background(), d); err != nil {
+				t.Fatalf("DialGRIBI() got unexpected error: %v", err)
+			}
+			if _, err := b.DialP4RT(context.Background(), d); err != nil {
+				t.Fatalf("DialP4RT() got unexpected error: %v", err)
+			}
+		},
+	}}
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			kneCmdFn = func(cfg *Config, args ...string) ([]byte, error) {
+				return []byte(tt.topo), nil
+			}
+			res, err := bind.Reserve(context.Background(), tt.tb, time.Minute, time.Minute, nil)
 			if err != nil {
-				t.Fatalf("New failed: %v", err)
+				t.Fatalf("Reserve() failed: %v", err)
 			}
-			_, gotErr := b.Reserve(context.Background(), test.tb, time.Minute, time.Minute)
-			if diff := errdiff.Substring(gotErr, test.wantErr); diff != "" {
-				t.Errorf("Reserve() got unexpected error diff: %s", diff)
+			d, ok := res.DUTs["dut1"]
+			if !ok {
+				t.Fatalf("Node %q not found in topology", "node1")
+			}
+			tt.serviceCheck(t, bind, d)
+		})
+	}
+}
+
+func TestPushConfig(t *testing.T) {
+	const dutName = "dut"
+	bind := &Bind{
+		cfg: &Config{},
+		services: solver.ServiceMap{dutName: map[string]*tpb.Service{
+			"ssh": &tpb.Service{OutsideIp: "1.2.3.4", Outside: 1234},
+		}},
+	}
+	var sshErr error
+	sshExecFn = func(addr string, cfg *ssh.ClientConfig, cmd string) (_ string, rerr error) {
+		return "", sshErr
+	}
+	var gotReset bool
+	kneCmdFn = func(cfg *Config, args ...string) ([]byte, error) {
+		for _, a := range args {
+			if a == "reset" {
+				gotReset = true
+			}
+		}
+		return nil, nil
+	}
+
+	tests := []struct {
+		desc      string
+		dut       *binding.DUT
+		reset     bool
+		sshErr    error
+		wantReset bool
+		wantErr   string
+	}{{
+		desc: "success",
+		dut:  &binding.DUT{&binding.Dims{Name: dutName, Vendor: opb.Device_ARISTA}},
+	}, {
+		desc:      "reset success",
+		dut:       &binding.DUT{&binding.Dims{Name: dutName, Vendor: opb.Device_ARISTA}},
+		reset:     true,
+		wantReset: true,
+	}, {
+		desc:    "only arista support",
+		dut:     &binding.DUT{&binding.Dims{Name: dutName, Vendor: opb.Device_CISCO}},
+		wantErr: "supports Arista",
+	}, {
+		desc:    "ssh error",
+		dut:     &binding.DUT{&binding.Dims{Name: dutName, Vendor: opb.Device_ARISTA}},
+		sshErr:  errors.New("ssh error"),
+		wantErr: "ssh error",
+	}}
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			sshErr = tt.sshErr
+			gotReset = false
+			err := bind.PushConfig(context.Background(), tt.dut, "my config", tt.reset)
+			if (err == nil) != (tt.wantErr == "") || (err != nil && !strings.Contains(err.Error(), tt.wantErr)) {
+				t.Errorf("PushConfig got error %v, want %v", err, tt.wantErr)
+			}
+			if gotReset != tt.wantReset {
+				t.Errorf("PushConfig got reset %v, want %v", gotReset, tt.wantReset)
 			}
 		})
 	}

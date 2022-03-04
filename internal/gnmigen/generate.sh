@@ -45,6 +45,7 @@ COMMON_ARGS=(
   -generate_leaf_getters
   -generate_populate_defaults
   -structs_split_files_count=10
+  -generate_populate_defaults
 )
 
 YANG_FILES=(
@@ -74,6 +75,7 @@ YANG_FILES=(
   public/release/models/optical-transport/openconfig-transport-types.yang
   public/release/models/ospf/openconfig-ospfv2.yang
   public/release/models/platform/openconfig-platform-cpu.yang
+  public/release/models/platform/openconfig-platform-integrated-circuit.yang
   public/release/models/platform/openconfig-platform-software.yang
   public/release/models/platform/openconfig-platform-transceiver.yang
   public/release/models/platform/openconfig-platform.yang
@@ -178,7 +180,7 @@ go run internal/gnmigen/main/main.go \
   -split_pathstructs_by_module=true \
   -fake_root_helper_filename=device/root_helper.go \
   -fake_root_gnmi_filename=device/device_telem.go \
-  -telemetry_funcs_file_split=20 \
+  -telemetry_funcs_file_split=10 \
   -telemetry_types_file_split=10 \
   "${YANG_FILES[@]}"
 

@@ -1,4 +1,5 @@
 {
+  "xpath": "/traffic",
   "useRfc5952": true,
   "trafficItem": [
     {
@@ -9,11 +10,14 @@
       "appLibProfile": null,
       "configElement": [
         {
+          "xpath": "/traffic/trafficItem[1]/configElement[1]",
           "frameRate": {
+            "xpath": "/traffic/trafficItem[1]/configElement[1]/frameRate",
             "rate": 20,
             "type": "percentLineRate"
           },
           "frameSize": {
+            "xpath": "/traffic/trafficItem[1]/configElement[1]/frameSize",
             "fixedSize": 1000,
             "quadGaussian": [],
             "type": "fixed",
@@ -447,6 +451,7 @@
       "egressTracking": null,
       "endpointSet": [
         {
+          "xpath": "/traffic/trafficItem[1]/endpointSet[1]",
           "destinations": [
             "/topology[2]/deviceGroup[1]"
           ],
@@ -461,6 +466,7 @@
       "highLevelStream": null,
       "tracking": [
         {
+          "xpath": "/traffic/trafficItem[1]/tracking",
           "trackBy": [
             "trackingenabled0"
           ],

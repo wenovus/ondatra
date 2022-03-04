@@ -20,16 +20,15 @@ import (
 	"testing"
 
 	log "github.com/golang/glog"
-
+	"github.com/openconfig/ondatra/binding"
 	"github.com/openconfig/ondatra/internal/ate"
-	"github.com/openconfig/ondatra/internal/reservation"
 
 	opb "github.com/openconfig/ondatra/proto"
 )
 
 // Traffic is ATE Traffic API.
 type Traffic struct {
-	ate *reservation.ATE
+	ate *binding.ATE
 }
 
 func (tr *Traffic) String() string {
@@ -148,7 +147,15 @@ func endpointPBs(eps []Endpoint) []*opb.Flow_Endpoint {
 		case *Interface:
 			epPB = &opb.Flow_Endpoint{InterfaceName: e.pb.GetName()}
 		case *Network:
-			epPB = &opb.Flow_Endpoint{InterfaceName: e.pb.GetInterfaceName(), NetworkName: e.pb.GetName()}
+			epPB = &opb.Flow_Endpoint{
+				InterfaceName: e.pb.GetInterfaceName(),
+				Generated:     &opb.Flow_Endpoint_NetworkName{NetworkName: e.pb.GetName()},
+			}
+		case *RSVP:
+			epPB = &opb.Flow_Endpoint{
+				InterfaceName: e.pb.GetInterfaceName(),
+				Generated:     &opb.Flow_Endpoint_RsvpName{RsvpName: e.pb.GetName()},
+			}
 		default:
 			log.Fatalf("unknown endpoint type: %v (%T)", e, e)
 		}
@@ -269,6 +276,15 @@ func (f *Flow) WithIngressTrackingByDstIPV6(enable bool) *Flow {
 	return f
 }
 
+// WithIngressTrackingByVLANID enables ingress tracking by VLAN ID.
+func (f *Flow) WithIngressTrackingByVLANID(enable bool) *Flow {
+	if f.pb.IngressTrackingFilters == nil {
+		f.pb.IngressTrackingFilters = &opb.Flow_IngressTrackingFilters{}
+	}
+	f.pb.IngressTrackingFilters.VlanId = enable
+	return f
+}
+
 // WithFrameSize sets the frame size for this flow to a fixed value.
 // To generate a range of frame sizes, use FrameSizeRange() instead.
 func (f *Flow) WithFrameSize(n uint32) *Flow {
@@ -354,6 +370,20 @@ func (t *Transmission) WithPatternBurst() *Transmission {
 	return t
 }
 
+// WithPatternFixedPacketCount configures the transmission to send a specified number of packets.
+func (t *Transmission) WithPatternFixedPacketCount(packetsCount uint32) *Transmission {
+	t.pb.Pattern = opb.Transmission_FIXED_FRAME_COUNT
+	t.pb.FrameCount = packetsCount
+	return t
+}
+
+// WithPatternFixedDuration configures the transmission to send a specified number of seconds.
+func (t *Transmission) WithPatternFixedDuration(secs uint32) *Transmission {
+	t.pb.Pattern = opb.Transmission_FIXED_DURATION
+	t.pb.DurationSecs = secs
+	return t
+}
+
 // WithMinGapBytes sets the minimum gap between transmitted packets.
 func (t *Transmission) WithMinGapBytes(minPacketGapBytes uint32) *Transmission {
 	t.pb.MinGapBytes = minPacketGapBytes
@@ -435,7 +465,7 @@ func (f *Flow) WithFrameSizeIMIXTolly() *Flow {
 func (f *Flow) FrameSizeIMIXCustom() *IMIXCustom {
 	if f.pb.FrameSize.GetImixCustom() == nil {
 		f.pb.FrameSize = &opb.FrameSize{
-			Type: &opb.FrameSize_ImixCustom_ {
+			Type: &opb.FrameSize_ImixCustom_{
 				ImixCustom: &opb.FrameSize_ImixCustom{},
 			},
 		}
@@ -446,7 +476,7 @@ func (f *Flow) FrameSizeIMIXCustom() *IMIXCustom {
 // AddEntry adds a custom IMIX entry.
 func (ic *IMIXCustom) AddEntry(size, weight uint32) *IMIXCustom {
 	ic.pb.Entries = append(ic.pb.Entries, &opb.FrameSize_ImixCustomEntry{
-		Size: size,
+		Size:   size,
 		Weight: weight,
 	})
 	return ic

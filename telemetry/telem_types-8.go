@@ -12,266 +12,6 @@ import (
 	"github.com/openconfig/ygot/ygot"
 )
 
-// QualifiedE_ExplicitRouteObject_Type is a E_ExplicitRouteObject_Type with a corresponding timestamp.
-type QualifiedE_ExplicitRouteObject_Type struct {
-	*genutil.Metadata
-	val     E_ExplicitRouteObject_Type // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedE_ExplicitRouteObject_Type) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the E_ExplicitRouteObject_Type sample, erroring out if not present.
-func (q *QualifiedE_ExplicitRouteObject_Type) Val(t testing.TB) E_ExplicitRouteObject_Type {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the E_ExplicitRouteObject_Type sample.
-func (q *QualifiedE_ExplicitRouteObject_Type) SetVal(v E_ExplicitRouteObject_Type) *QualifiedE_ExplicitRouteObject_Type {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedE_ExplicitRouteObject_Type) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionE_ExplicitRouteObject_Type is a telemetry Collection whose Await method returns a slice of E_ExplicitRouteObject_Type samples.
-type CollectionE_ExplicitRouteObject_Type struct {
-	W    *E_ExplicitRouteObject_TypeWatcher
-	Data []*QualifiedE_ExplicitRouteObject_Type
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionE_ExplicitRouteObject_Type) Await(t testing.TB) []*QualifiedE_ExplicitRouteObject_Type {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// E_ExplicitRouteObject_TypeWatcher observes a stream of E_ExplicitRouteObject_Type samples.
-type E_ExplicitRouteObject_TypeWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedE_ExplicitRouteObject_Type
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *E_ExplicitRouteObject_TypeWatcher) Await(t testing.TB) (*QualifiedE_ExplicitRouteObject_Type, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
-// QualifiedE_ExtendedPrefix_AddressFamily is a E_ExtendedPrefix_AddressFamily with a corresponding timestamp.
-type QualifiedE_ExtendedPrefix_AddressFamily struct {
-	*genutil.Metadata
-	val     E_ExtendedPrefix_AddressFamily // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedE_ExtendedPrefix_AddressFamily) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the E_ExtendedPrefix_AddressFamily sample, erroring out if not present.
-func (q *QualifiedE_ExtendedPrefix_AddressFamily) Val(t testing.TB) E_ExtendedPrefix_AddressFamily {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the E_ExtendedPrefix_AddressFamily sample.
-func (q *QualifiedE_ExtendedPrefix_AddressFamily) SetVal(v E_ExtendedPrefix_AddressFamily) *QualifiedE_ExtendedPrefix_AddressFamily {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedE_ExtendedPrefix_AddressFamily) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionE_ExtendedPrefix_AddressFamily is a telemetry Collection whose Await method returns a slice of E_ExtendedPrefix_AddressFamily samples.
-type CollectionE_ExtendedPrefix_AddressFamily struct {
-	W    *E_ExtendedPrefix_AddressFamilyWatcher
-	Data []*QualifiedE_ExtendedPrefix_AddressFamily
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionE_ExtendedPrefix_AddressFamily) Await(t testing.TB) []*QualifiedE_ExtendedPrefix_AddressFamily {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// E_ExtendedPrefix_AddressFamilyWatcher observes a stream of E_ExtendedPrefix_AddressFamily samples.
-type E_ExtendedPrefix_AddressFamilyWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedE_ExtendedPrefix_AddressFamily
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *E_ExtendedPrefix_AddressFamilyWatcher) Await(t testing.TB) (*QualifiedE_ExtendedPrefix_AddressFamily, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
-// QualifiedE_ExtendedPrefix_RouteType is a E_ExtendedPrefix_RouteType with a corresponding timestamp.
-type QualifiedE_ExtendedPrefix_RouteType struct {
-	*genutil.Metadata
-	val     E_ExtendedPrefix_RouteType // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedE_ExtendedPrefix_RouteType) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the E_ExtendedPrefix_RouteType sample, erroring out if not present.
-func (q *QualifiedE_ExtendedPrefix_RouteType) Val(t testing.TB) E_ExtendedPrefix_RouteType {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the E_ExtendedPrefix_RouteType sample.
-func (q *QualifiedE_ExtendedPrefix_RouteType) SetVal(v E_ExtendedPrefix_RouteType) *QualifiedE_ExtendedPrefix_RouteType {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedE_ExtendedPrefix_RouteType) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionE_ExtendedPrefix_RouteType is a telemetry Collection whose Await method returns a slice of E_ExtendedPrefix_RouteType samples.
-type CollectionE_ExtendedPrefix_RouteType struct {
-	W    *E_ExtendedPrefix_RouteTypeWatcher
-	Data []*QualifiedE_ExtendedPrefix_RouteType
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionE_ExtendedPrefix_RouteType) Await(t testing.TB) []*QualifiedE_ExtendedPrefix_RouteType {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// E_ExtendedPrefix_RouteTypeWatcher observes a stream of E_ExtendedPrefix_RouteType samples.
-type E_ExtendedPrefix_RouteTypeWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedE_ExtendedPrefix_RouteType
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *E_ExtendedPrefix_RouteTypeWatcher) Await(t testing.TB) (*QualifiedE_ExtendedPrefix_RouteType, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
-// QualifiedE_Global_SummaryRouteCostMode is a E_Global_SummaryRouteCostMode with a corresponding timestamp.
-type QualifiedE_Global_SummaryRouteCostMode struct {
-	*genutil.Metadata
-	val     E_Global_SummaryRouteCostMode // val is the sample value.
-	present bool
-}
-
-func (q *QualifiedE_Global_SummaryRouteCostMode) String() string {
-	return genutil.QualifiedTypeString(q.val, q.Metadata)
-}
-
-// Val returns the value of the E_Global_SummaryRouteCostMode sample, erroring out if not present.
-func (q *QualifiedE_Global_SummaryRouteCostMode) Val(t testing.TB) E_Global_SummaryRouteCostMode {
-	t.Helper()
-	if q == nil {
-		t.Fatal("No value present")
-	}
-	if !q.present {
-		pathStr, err := ygot.PathToString(q.Path)
-		if err != nil {
-			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
-		}
-		t.Fatalf("No value present at path %s", pathStr)
-	}
-	return q.val
-}
-
-// SetVal sets the value of the E_Global_SummaryRouteCostMode sample.
-func (q *QualifiedE_Global_SummaryRouteCostMode) SetVal(v E_Global_SummaryRouteCostMode) *QualifiedE_Global_SummaryRouteCostMode {
-	q.val = v
-	q.present = true
-	return q
-}
-
-// IsPresent returns true if the qualified struct contains a value.
-func (q *QualifiedE_Global_SummaryRouteCostMode) IsPresent() bool {
-	return q != nil && q.present
-}
-
-// CollectionE_Global_SummaryRouteCostMode is a telemetry Collection whose Await method returns a slice of E_Global_SummaryRouteCostMode samples.
-type CollectionE_Global_SummaryRouteCostMode struct {
-	W    *E_Global_SummaryRouteCostModeWatcher
-	Data []*QualifiedE_Global_SummaryRouteCostMode
-}
-
-// Await blocks until the telemetry collection is complete and returns the slice of values collected.
-func (c *CollectionE_Global_SummaryRouteCostMode) Await(t testing.TB) []*QualifiedE_Global_SummaryRouteCostMode {
-	t.Helper()
-	c.W.Await(t)
-	return c.Data
-}
-
-// E_Global_SummaryRouteCostModeWatcher observes a stream of E_Global_SummaryRouteCostMode samples.
-type E_Global_SummaryRouteCostModeWatcher struct {
-	W       *genutil.Watcher
-	LastVal *QualifiedE_Global_SummaryRouteCostMode
-}
-
-// Await blocks until the Watch predicate is true or the duration elapses.
-// It returns the last value received and a boolean indicating whether it satisfies the predicate.
-func (w *E_Global_SummaryRouteCostModeWatcher) Await(t testing.TB) (*QualifiedE_Global_SummaryRouteCostMode, bool) {
-	t.Helper()
-	return w.LastVal, w.W.Await(t)
-}
-
 // QualifiedE_GracefulRestart_Mode is a E_GracefulRestart_Mode with a corresponding timestamp.
 type QualifiedE_GracefulRestart_Mode struct {
 	*genutil.Metadata
@@ -1893,6 +1633,71 @@ type E_IsisTypes_SAFI_TYPEWatcher struct {
 // Await blocks until the Watch predicate is true or the duration elapses.
 // It returns the last value received and a boolean indicating whether it satisfies the predicate.
 func (w *E_IsisTypes_SAFI_TYPEWatcher) Await(t testing.TB) (*QualifiedE_IsisTypes_SAFI_TYPE, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedE_KeychainTypes_CRYPTO_TYPE is a E_KeychainTypes_CRYPTO_TYPE with a corresponding timestamp.
+type QualifiedE_KeychainTypes_CRYPTO_TYPE struct {
+	*genutil.Metadata
+	val     E_KeychainTypes_CRYPTO_TYPE // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedE_KeychainTypes_CRYPTO_TYPE) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the E_KeychainTypes_CRYPTO_TYPE sample, erroring out if not present.
+func (q *QualifiedE_KeychainTypes_CRYPTO_TYPE) Val(t testing.TB) E_KeychainTypes_CRYPTO_TYPE {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the E_KeychainTypes_CRYPTO_TYPE sample.
+func (q *QualifiedE_KeychainTypes_CRYPTO_TYPE) SetVal(v E_KeychainTypes_CRYPTO_TYPE) *QualifiedE_KeychainTypes_CRYPTO_TYPE {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedE_KeychainTypes_CRYPTO_TYPE) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionE_KeychainTypes_CRYPTO_TYPE is a telemetry Collection whose Await method returns a slice of E_KeychainTypes_CRYPTO_TYPE samples.
+type CollectionE_KeychainTypes_CRYPTO_TYPE struct {
+	W    *E_KeychainTypes_CRYPTO_TYPEWatcher
+	Data []*QualifiedE_KeychainTypes_CRYPTO_TYPE
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionE_KeychainTypes_CRYPTO_TYPE) Await(t testing.TB) []*QualifiedE_KeychainTypes_CRYPTO_TYPE {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// E_KeychainTypes_CRYPTO_TYPEWatcher observes a stream of E_KeychainTypes_CRYPTO_TYPE samples.
+type E_KeychainTypes_CRYPTO_TYPEWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedE_KeychainTypes_CRYPTO_TYPE
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *E_KeychainTypes_CRYPTO_TYPEWatcher) Await(t testing.TB) (*QualifiedE_KeychainTypes_CRYPTO_TYPE, bool) {
 	t.Helper()
 	return w.LastVal, w.W.Await(t)
 }
@@ -8523,6 +8328,266 @@ type E_VlanTypes_VlanStackActionWatcher struct {
 // Await blocks until the Watch predicate is true or the duration elapses.
 // It returns the last value received and a boolean indicating whether it satisfies the predicate.
 func (w *E_VlanTypes_VlanStackActionWatcher) Await(t testing.TB) (*QualifiedE_VlanTypes_VlanStackAction, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedE_Vlan_Status is a E_Vlan_Status with a corresponding timestamp.
+type QualifiedE_Vlan_Status struct {
+	*genutil.Metadata
+	val     E_Vlan_Status // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedE_Vlan_Status) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the E_Vlan_Status sample, erroring out if not present.
+func (q *QualifiedE_Vlan_Status) Val(t testing.TB) E_Vlan_Status {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the E_Vlan_Status sample.
+func (q *QualifiedE_Vlan_Status) SetVal(v E_Vlan_Status) *QualifiedE_Vlan_Status {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedE_Vlan_Status) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionE_Vlan_Status is a telemetry Collection whose Await method returns a slice of E_Vlan_Status samples.
+type CollectionE_Vlan_Status struct {
+	W    *E_Vlan_StatusWatcher
+	Data []*QualifiedE_Vlan_Status
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionE_Vlan_Status) Await(t testing.TB) []*QualifiedE_Vlan_Status {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// E_Vlan_StatusWatcher observes a stream of E_Vlan_Status samples.
+type E_Vlan_StatusWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedE_Vlan_Status
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *E_Vlan_StatusWatcher) Await(t testing.TB) (*QualifiedE_Vlan_Status, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedFlow_IngressTracking_MplsLabel_Union is a Flow_IngressTracking_MplsLabel_Union with a corresponding timestamp.
+type QualifiedFlow_IngressTracking_MplsLabel_Union struct {
+	*genutil.Metadata
+	val     Flow_IngressTracking_MplsLabel_Union // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedFlow_IngressTracking_MplsLabel_Union) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the Flow_IngressTracking_MplsLabel_Union sample, erroring out if not present.
+func (q *QualifiedFlow_IngressTracking_MplsLabel_Union) Val(t testing.TB) Flow_IngressTracking_MplsLabel_Union {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the Flow_IngressTracking_MplsLabel_Union sample.
+func (q *QualifiedFlow_IngressTracking_MplsLabel_Union) SetVal(v Flow_IngressTracking_MplsLabel_Union) *QualifiedFlow_IngressTracking_MplsLabel_Union {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedFlow_IngressTracking_MplsLabel_Union) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionFlow_IngressTracking_MplsLabel_Union is a telemetry Collection whose Await method returns a slice of Flow_IngressTracking_MplsLabel_Union samples.
+type CollectionFlow_IngressTracking_MplsLabel_Union struct {
+	W    *Flow_IngressTracking_MplsLabel_UnionWatcher
+	Data []*QualifiedFlow_IngressTracking_MplsLabel_Union
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionFlow_IngressTracking_MplsLabel_Union) Await(t testing.TB) []*QualifiedFlow_IngressTracking_MplsLabel_Union {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// Flow_IngressTracking_MplsLabel_UnionWatcher observes a stream of Flow_IngressTracking_MplsLabel_Union samples.
+type Flow_IngressTracking_MplsLabel_UnionWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedFlow_IngressTracking_MplsLabel_Union
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *Flow_IngressTracking_MplsLabel_UnionWatcher) Await(t testing.TB) (*QualifiedFlow_IngressTracking_MplsLabel_Union, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedFlow_MplsLabel_Union is a Flow_MplsLabel_Union with a corresponding timestamp.
+type QualifiedFlow_MplsLabel_Union struct {
+	*genutil.Metadata
+	val     Flow_MplsLabel_Union // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedFlow_MplsLabel_Union) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the Flow_MplsLabel_Union sample, erroring out if not present.
+func (q *QualifiedFlow_MplsLabel_Union) Val(t testing.TB) Flow_MplsLabel_Union {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the Flow_MplsLabel_Union sample.
+func (q *QualifiedFlow_MplsLabel_Union) SetVal(v Flow_MplsLabel_Union) *QualifiedFlow_MplsLabel_Union {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedFlow_MplsLabel_Union) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionFlow_MplsLabel_Union is a telemetry Collection whose Await method returns a slice of Flow_MplsLabel_Union samples.
+type CollectionFlow_MplsLabel_Union struct {
+	W    *Flow_MplsLabel_UnionWatcher
+	Data []*QualifiedFlow_MplsLabel_Union
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionFlow_MplsLabel_Union) Await(t testing.TB) []*QualifiedFlow_MplsLabel_Union {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// Flow_MplsLabel_UnionWatcher observes a stream of Flow_MplsLabel_Union samples.
+type Flow_MplsLabel_UnionWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedFlow_MplsLabel_Union
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *Flow_MplsLabel_UnionWatcher) Await(t testing.TB) (*QualifiedFlow_MplsLabel_Union, bool) {
+	t.Helper()
+	return w.LastVal, w.W.Await(t)
+}
+
+// QualifiedInterface_RoutedVlan_Vlan_Union is a Interface_RoutedVlan_Vlan_Union with a corresponding timestamp.
+type QualifiedInterface_RoutedVlan_Vlan_Union struct {
+	*genutil.Metadata
+	val     Interface_RoutedVlan_Vlan_Union // val is the sample value.
+	present bool
+}
+
+func (q *QualifiedInterface_RoutedVlan_Vlan_Union) String() string {
+	return genutil.QualifiedTypeString(q.val, q.Metadata)
+}
+
+// Val returns the value of the Interface_RoutedVlan_Vlan_Union sample, erroring out if not present.
+func (q *QualifiedInterface_RoutedVlan_Vlan_Union) Val(t testing.TB) Interface_RoutedVlan_Vlan_Union {
+	t.Helper()
+	if q == nil {
+		t.Fatal("No value present")
+	}
+	if !q.present {
+		pathStr, err := ygot.PathToString(q.Path)
+		if err != nil {
+			pathStr = fmt.Sprintf("%v", q.Path.GetElem())
+		}
+		t.Fatalf("No value present at path %s", pathStr)
+	}
+	return q.val
+}
+
+// SetVal sets the value of the Interface_RoutedVlan_Vlan_Union sample.
+func (q *QualifiedInterface_RoutedVlan_Vlan_Union) SetVal(v Interface_RoutedVlan_Vlan_Union) *QualifiedInterface_RoutedVlan_Vlan_Union {
+	q.val = v
+	q.present = true
+	return q
+}
+
+// IsPresent returns true if the qualified struct contains a value.
+func (q *QualifiedInterface_RoutedVlan_Vlan_Union) IsPresent() bool {
+	return q != nil && q.present
+}
+
+// CollectionInterface_RoutedVlan_Vlan_Union is a telemetry Collection whose Await method returns a slice of Interface_RoutedVlan_Vlan_Union samples.
+type CollectionInterface_RoutedVlan_Vlan_Union struct {
+	W    *Interface_RoutedVlan_Vlan_UnionWatcher
+	Data []*QualifiedInterface_RoutedVlan_Vlan_Union
+}
+
+// Await blocks until the telemetry collection is complete and returns the slice of values collected.
+func (c *CollectionInterface_RoutedVlan_Vlan_Union) Await(t testing.TB) []*QualifiedInterface_RoutedVlan_Vlan_Union {
+	t.Helper()
+	c.W.Await(t)
+	return c.Data
+}
+
+// Interface_RoutedVlan_Vlan_UnionWatcher observes a stream of Interface_RoutedVlan_Vlan_Union samples.
+type Interface_RoutedVlan_Vlan_UnionWatcher struct {
+	W       *genutil.Watcher
+	LastVal *QualifiedInterface_RoutedVlan_Vlan_Union
+}
+
+// Await blocks until the Watch predicate is true or the duration elapses.
+// It returns the last value received and a boolean indicating whether it satisfies the predicate.
+func (w *Interface_RoutedVlan_Vlan_UnionWatcher) Await(t testing.TB) (*QualifiedInterface_RoutedVlan_Vlan_Union, bool) {
 	t.Helper()
 	return w.LastVal, w.W.Await(t)
 }

@@ -18,11 +18,5 @@ package ixconfig
 type IxiaCfgNode interface {
 	// XPath returns the current XPath of the config node.
 	XPath() *XPath
-	// setRestID sets the (REST API) ID field of an IxiaCfgNode.
-	setRestID(string)
-	// GetRestID returns the current (REST API) ID field of an IxiaCfgNode.
-	GetRestID() string
+	copyCfg(map[interface{}]interface{}) IxiaCfgNode
 }
-
-// Href represents a pointer to a different config object.
-type Href struct{}

@@ -99,6 +99,12 @@ func (i *Interface) WithIPv4Loopback(ipv4LoopbackCIDR string) *Interface {
 	return i
 }
 
+// WithIPv6Loopback configures the IPv6 loopback address for the interface.
+func (i *Interface) WithIPv6Loopback(ipv6LoopbackCIDR string) *Interface {
+	i.pb.Ipv6LoopbackCidr = ipv6LoopbackCIDR
+	return i
+}
+
 // ISIS creates an ISIS config for the interface or returns the existing config.
 // The default config paramas are:
 // Area Id: 490001
@@ -126,8 +132,8 @@ func (i *Interface) BGP() *BGP {
 }
 
 // AddRSVP adds an RSVP config to the interface.
-func (i *Interface) AddRSVP() *RSVP {
-	rpb := &opb.RsvpConfig{}
+func (i *Interface) AddRSVP(name string) *RSVP {
+	rpb := &opb.RsvpConfig{Name: name, InterfaceName: i.pb.Name}
 	i.pb.Rsvp = append(i.pb.Rsvp, rpb)
 	return &RSVP{pb: rpb}
 }

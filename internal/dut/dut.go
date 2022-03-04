@@ -23,9 +23,9 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"github.com/openconfig/ondatra/internal/binding"
-	"github.com/openconfig/ondatra/internal/reservation"
-	"github.com/openconfig/ondatra/internal/usererr"
+	"github.com/openconfig/ondatra/binding"
+	"github.com/openconfig/ondatra/binding/usererr"
+	"github.com/openconfig/ondatra/internal/testbed"
 
 	opb "github.com/openconfig/ondatra/proto"
 )
@@ -35,9 +35,9 @@ const configTrunc = 10
 
 // Config stores the potential config text to push to the device.
 type Config struct {
-	VC   map[opb.Device_Vendor]ConfigProvider
-	Open ConfigProvider
-	Vars map[string]string
+	AllVendor ConfigProvider
+	PerVendor map[opb.Device_Vendor]ConfigProvider
+	Vars      map[string]string
 }
 
 // ConfigProvider provide config text to push to the device.
@@ -74,15 +74,18 @@ func (f ConfigFile) Get() (string, error) {
 }
 
 // PushConfig pushes config to a DUT.
-func PushConfig(ctx context.Context, dut *reservation.DUT, cfg *Config, append bool) error {
-	prov, ok := cfg.VC[dut.Vendor]
-	if !ok {
-		if cfg.Open == nil {
-			return errors.Errorf("no openconfig or vendor config for device %v", dut)
-		}
-		prov = cfg.Open
+func PushConfig(ctx context.Context, dut *binding.DUT, cfg *Config, reset bool) error {
+	if cfg.AllVendor != nil && len(cfg.PerVendor) > 0 {
+		return errors.New("cannot specify both all-vendor and per-vendor config")
 	}
-	openConfig := prov == cfg.Open
+	var prov ConfigProvider
+	if cfg.AllVendor != nil {
+		prov = cfg.AllVendor
+	} else if c, ok := cfg.PerVendor[dut.Vendor]; ok {
+		prov = c
+	} else {
+		return errors.Errorf("no config specified for device %v", dut)
+	}
 	text, err := prov.Get()
 	if err != nil {
 		return errors.Wrapf(err, "error getting config from provider %v", prov)
@@ -91,8 +94,7 @@ func PushConfig(ctx context.Context, dut *reservation.DUT, cfg *Config, append b
 	if err != nil {
 		return err
 	}
-	opts := &binding.ConfigOptions{OpenConfig: openConfig, Append: append}
-	return binding.Get().PushConfig(ctx, dut, config, opts)
+	return testbed.Bind().PushConfig(ctx, dut, config, reset)
 }
 
 // interpolateConfig substitutes templated variables in device config text.
@@ -100,10 +102,10 @@ func PushConfig(ctx context.Context, dut *reservation.DUT, cfg *Config, append b
 // - {{ port "<portID>" }}: replaced with the physical port name
 // - {{ secrets "<arg1>" "<arg2>" }}: left untouched, returned as-is
 // - {{ var "<key>" }}: returns the value for the key in the vars map
-func interpolateConfig(dut *reservation.DUT, config string, vars map[string]string) (string, error) {
+func interpolateConfig(dut *binding.DUT, config string, vars map[string]string) (string, error) {
 	funcMap := map[string]interface{}{
 		"port": func(portID string) (string, error) {
-			port, err := dut.Port(portID)
+			port, err := testbed.Port(dut.Dims, portID)
 			if err != nil {
 				return "", usererr.Wrap(err)
 			}

@@ -24,7 +24,7 @@ import (
 	log "github.com/golang/glog"
 	"github.com/pkg/errors"
 	"github.com/openconfig/ygot/ygot"
-	"github.com/openconfig/ondatra/internal/ixweb"
+	"github.com/openconfig/ondatra/binding/ixweb"
 	"github.com/openconfig/ondatra/telemetry"
 )
 
@@ -295,6 +295,7 @@ func ingressTrackingFromFlowStats(flow *telemetry.Flow, row *flowRow) *telemetry
 		row.dstIPv4,
 		row.srcIPv6,
 		row.dstIPv6,
+		vlanIDFromUint(row.vlanID),
 	)
 }
 
@@ -320,6 +321,13 @@ func mplsLabelFromUint(label *uint64) telemetry.Flow_IngressTracking_MplsLabel_U
 		return telemetry.MplsTypes_MplsLabel_Enum_UNSET
 	}
 	return telemetry.UnionUint32(labelNum)
+}
+
+func vlanIDFromUint(id *uint64) uint16 {
+	if id == nil {
+		return 0
+	}
+	return uint16(*id)
 }
 
 // Strips off the Ixia name from the port name.
