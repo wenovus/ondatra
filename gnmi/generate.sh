@@ -110,6 +110,7 @@ OTG_YANG_FILES=(
 )
 
 go run github.com/openconfig/ygnmi/app/ygnmi generator \
+  --typedef_enum_with_defmod=false \
   --trim_module_prefix=openconfig \
   --exclude_modules="${EXCLUDE_MODULES}" \
   --base_package_path=github.com/openconfig/ondatra/gnmi/oc \
@@ -120,6 +121,7 @@ go run github.com/openconfig/ygnmi/app/ygnmi generator \
   "${YANG_FILES[@]}"
 
 go run github.com/openconfig/ygnmi/app/ygnmi generator \
+  --typedef_enum_with_defmod=false \
   --trim_module_prefix=open-traffic-generator \
   --base_package_path=github.com/openconfig/ondatra/gnmi/otg \
   --output_dir=gnmi/otg \
